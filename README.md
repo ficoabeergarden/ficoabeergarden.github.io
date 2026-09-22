@@ -29,4 +29,4 @@ Menú de domicilio incluido (precios de la carta): alitas y costillitas, hamburg
 
 - **Costo de envío y zonas de cobertura**: hoy la página dice que se confirma por WhatsApp.
 - **Agenda**: los flyers son los actuales; hay que cambiarlos cada semana.
-- **Juega y gana**: "Sirve la perfecta", 5 rondas, meta 290 puntos. Definir qué premio se canjea en caja.
+- **Juega y gana**: "Llena el jarro", 3 jarros, meta 240 puntos. Mantener presionado para servir y soltar en la línea. Definir qué premio se canjea en caja.
