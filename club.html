@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beer Club · Ficoa Beer Garden</title>
+<meta name="theme-color" content="#17150f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17150f;--paper:#f6f3e9;--bg:#e9e5d9;--amber:#e8b246;--green:#2f5d34;--wood:#2e2116;--grass:#3f6b3a;--muted:rgba(23,21,15,.72);--line:rgba(23,21,15,.22)}
+*{box-sizing:border-box}
+body{margin:0;background:#d8d2c2;color:var(--ink);font-family:"DM Mono",ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+a{color:var(--ink)}a:hover{color:#3d382c}
+.wrap{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);padding-bottom:40px}
+h1,h2,h3{font-family:"Space Mono",ui-monospace,monospace;font-weight:700;letter-spacing:-.02em;text-transform:uppercase;margin:0}
+p{margin:0;line-height:1.5;text-wrap:pretty}
+.pad{padding:24px 20px}
+.stack{display:grid;gap:14px}
+.kick{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--green)}
+.dark .kick{color:var(--amber)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;padding:0 22px;border-radius:12px;font:500 15px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid var(--ink);box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 0 var(--ink)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:0 5px 0 var(--ink)}
+.btn-wood{background-color:var(--wood);background-image:linear-gradient(rgba(20,12,4,.34),rgba(20,12,4,.34)),url("bgc/tex-madera.jpg");background-size:auto,cover;background-position:center;color:#f7f2e6;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.btn-grass{background-color:var(--grass);background-image:linear-gradient(rgba(10,26,8,.3),rgba(10,26,8,.3)),url("bgc/tex-cesped.jpg");background-size:auto,cover;background-position:center;color:#f4f7e8;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.fx-outline{overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:18px 0}
+.fx-outline>div{white-space:nowrap;font-family:"Space Mono";font-weight:700;font-size:clamp(40px,11vw,58px);line-height:1.05;text-transform:uppercase;color:transparent;-webkit-text-stroke:1.5px rgba(246,243,233,.3);animation:slide 40s linear infinite;width:max-content}
+.fx-outline>div:nth-child(2){-webkit-text-stroke-color:var(--paper);animation-direction:reverse}
+.fx-outline>div:nth-child(3){-webkit-text-stroke-color:color-mix(in srgb,var(--amber) 70%,transparent)}
+@keyframes slide{to{transform:translateX(-50%)}}
+.fx-pills{display:flex;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)}
+.fx-pills-track{display:flex;gap:10px;flex:none;animation:slide 26s linear infinite;padding-right:10px}
+.fx-pill{flex:none;white-space:nowrap;font-family:"Space Mono";font-weight:700;font-size:26px;line-height:1;text-transform:uppercase;letter-spacing:-.02em;padding:9px 20px 11px;border-radius:999px;border:2px solid var(--ink);background:var(--ink);color:var(--amber)}
+.fx-pill:nth-child(even){background:transparent;color:var(--ink)}
+.fx-badge{width:92px;height:92px;border-radius:50%;background:var(--amber);color:var(--ink);border:2px solid var(--ink);display:grid;place-items:center;text-align:center;font-family:"Space Mono";font-weight:700;font-size:15px;line-height:1.05;text-transform:uppercase;transform:rotate(12deg);box-shadow:0 5px 0 var(--ink);animation:wob 3.5s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(4deg) scale(1.05)}}
+.fx-lift{transition:transform .15s}.fx-lift:hover{transform:translateY(-3px) rotate(-.4deg)}
+.fx-arc{position:relative;isolation:isolate;overflow:hidden}
+.fx-arc:before{content:"";position:absolute;z-index:-1;width:520px;height:520px;right:-360px;top:-140px;border-radius:50%;border:80px solid var(--grass);opacity:.14;pointer-events:none}
+.fx-ticket{position:relative;border-radius:14px}
+.fx-ticket:before,.fx-ticket:after{content:"";position:absolute;top:50%;width:24px;height:24px;margin-top:-12px;border-radius:50%;background:var(--bg);border:1px solid var(--ink)}
+.fx-ticket:before{left:-13px;clip-path:inset(0 0 0 50%)}.fx-ticket:after{right:-13px;clip-path:inset(0 50% 0 0)}
+.ruta{position:relative;display:grid;gap:14px;padding-left:36px}
+.ruta:before{content:"";position:absolute;left:12px;top:8px;bottom:8px;width:4px;background:var(--line)}
+.ruta .fill{position:absolute;left:12px;top:8px;width:4px;height:0;background:var(--amber);box-shadow:0 0 0 1px var(--ink)}
+.stop{position:relative;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;transition:transform .3s,background-color .3s}
+.stop .dot{position:absolute;left:-33px;top:50%;margin-top:-11px;width:22px;height:22px;border-radius:50%;background:var(--bg);border:2px solid var(--ink);transition:transform .3s,background-color .3s}
+.stop.on{background:#fbefcf;transform:translateX(4px)}
+.stop.on .dot{background:var(--amber);transform:scale(1.2)}
+.stamp{font-family:"Space Mono";font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:2px solid var(--green);color:var(--green);padding:5px 8px;opacity:0;transform:rotate(-8deg) scale(1.7);transition:opacity .25s,transform .35s cubic-bezier(.3,1.7,.5,1);white-space:nowrap}
+.stop.on .stamp{opacity:1;transform:rotate(-8deg) scale(1)}
+.rise{animation:rise .5s both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.pts{display:inline-block}
+.bump{animation:bump .6s}
+@keyframes bump{30%{transform:scale(1.14);color:var(--amber)}}
+.bar i{background:repeating-linear-gradient(-45deg,var(--amber) 0 10px,#f0c66a 10px 20px);background-size:28px 28px;animation:stripes 1s linear infinite}
+@keyframes stripes{to{background-position:28px 0}}
+@media (prefers-reduced-motion:reduce){.fx-outline>div,.fx-pills-track,.fx-badge,.bar i,.rise{animation:none}}
+.btn-paper{background:var(--paper);color:var(--ink)}
+.btn-sm{min-height:44px;width:auto;padding:0 14px;font-size:12px;box-shadow:0 3px 0 var(--ink)}
+.btn-sm:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.link{background:none;border:0;padding:8px 0;font:500 13px "DM Mono",monospace;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--ink)}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.field{display:grid;gap:6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.input{width:100%;min-height:54px;padding:0 14px;font:17px "DM Mono",monospace;background:var(--paper);border:1px solid var(--ink);border-radius:0;color:var(--ink)}
+.tel{display:grid;grid-template-columns:auto 1fr;border:1px solid var(--ink);background:var(--paper)}
+.tel span{display:grid;place-items:center;padding:0 12px;border-right:1px solid var(--ink);font-size:16px}
+.tel .input{border:0}
+.pin{letter-spacing:.6em;font-size:24px;text-align:center}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4}
+.check input{width:20px;height:20px;margin:0;accent-color:var(--green)}
+.box{border:1px solid var(--ink);box-shadow:0 5px 0 var(--ink);background:var(--paper)}
+.dark{background:var(--ink);color:var(--paper)}
+.zig{height:16px;background:linear-gradient(-45deg,var(--ink) 8px,transparent 0) 0 100%/16px 16px repeat-x,linear-gradient(45deg,var(--ink) 8px,transparent 0) 0 100%/16px 16px repeat-x}
+.zig.down{transform:scaleY(-1)}
+.err{background:#f3dccf;border:1px solid #8a2b12;color:#6d200c;padding:10px 12px;font-size:13px;line-height:1.4}
+.step{display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start}
+.step b{font-family:"Space Mono";font-size:26px;color:var(--amber);line-height:1}
+.step strong{font-family:"Space Mono";font-size:15px;display:block;margin-bottom:3px}
+.step span{font-size:13px;opacity:.82;line-height:1.45}
+.row{display:flex;align-items:center;gap:12px}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+.topbar a,.topbar button{color:var(--paper);background:none;border:0;font:inherit;letter-spacing:inherit;cursor:pointer;text-decoration:none;padding:6px 0}
+.card{padding:22px 20px 20px;display:grid;gap:14px}
+.pts{font-family:"Space Mono";font-weight:700;font-size:64px;line-height:.9;letter-spacing:-.04em}
+.pts small{font-size:18px;letter-spacing:0;margin-left:6px}
+.bar{height:12px;border:1px solid var(--paper);background:transparent}
+.bar i{display:block;height:100%;background:var(--amber);transition:width .6s}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--amber);color:var(--amber);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.qr{padding:18px;display:grid;justify-items:center;gap:10px;margin:0 20px}
+.qr svg{width:220px;height:220px;display:block}
+.list{display:grid}
+.list>div{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.list>div:first-child{border-top:0}
+.plus{color:var(--green);font-family:"Space Mono";font-weight:700}
+.minus{color:#8a2b12;font-family:"Space Mono";font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(23,21,15,.78);display:grid;place-items:center;padding:20px;z-index:40}
+.ticket{position:relative;width:min(340px,100%);background:var(--paper);border:1px solid var(--ink);border-radius:14px;box-shadow:0 10px 0 var(--ink);padding:24px 22px;display:grid;gap:14px;text-align:center}
+.ticket:before,.ticket:after{content:"";position:absolute;top:56%;width:26px;height:26px;border-radius:50%;background:#403a2e;border:1px solid var(--ink)}
+.ticket:before{left:-14px;clip-path:inset(0 0 0 50%)}.ticket:after{right:-14px;clip-path:inset(0 50% 0 0)}
+.code{font-family:"Space Mono";font-weight:700;font-size:52px;letter-spacing:.14em;line-height:1}
+.cut{border-top:2px dashed rgba(23,21,15,.3);margin:0 -6px}
+.toast{position:fixed;left:50%;bottom:28px;background:var(--amber);color:var(--ink);border:2px solid var(--ink);box-shadow:0 6px 0 var(--ink);padding:14px 24px;font:700 24px "Space Mono",monospace;z-index:60;white-space:nowrap;animation:pop 3.4s forwards}
+@keyframes pop{0%{transform:translate(-50%,24px) scale(.9);opacity:0}12%{transform:translate(-50%,0) scale(1.06);opacity:1}22%{transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
+.lvl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:14px 16px;align-items:baseline}
+.lvl strong{font-family:"Space Mono";font-size:19px;text-transform:uppercase}
+.lvl em{font-style:normal;font-family:"Space Mono";font-weight:700;color:var(--green)}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:sp 0.8s linear infinite;margin:60px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none;transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="spin"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+const SB_URL = "https://jukpaqtriemqvxormrgb.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1a3BhcXRyaWVtcXZ4b3JtcmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzODY1ODQsImV4cCI6MjEwNTk2MjU4NH0.4PPIVK2HvvgwrGEtNVn7CozqDCldvlFWnK2rpgrOmHE";
+const TEL_LOCAL = "593984551000";
+const sb = supabase.createClient(SB_URL, SB_KEY, { db: { schema: "beerclub" }, auth: { persistSession: false } });
+
+const NIVELES = [
+  { id: "espuma", nombre: "Espuma", desde: 0, mult: "×1" },
+  { id: "lupulo", nombre: "Lúpulo", desde: 500, mult: "×1.25" },
+  { id: "barril", nombre: "Barril", desde: 1500, mult: "×1.5" }
+];
+const app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const wa = (tel, t) => "https://wa.me/" + (tel || "") + "?text=" + encodeURIComponent(t);
+const baseUrl = location.origin + location.pathname;
+const normTel = v => { let d = String(v).replace(/\D/g, ""); if (d.startsWith("593")) return d; if (d.startsWith("0")) d = d.slice(1); return "593" + d; };
+const errMsg = e => (e && e.message ? e.message.replace(/^.*?:\s*/, "") : "Algo salió mal. Intenta otra vez.");
+
+let token = null, data = null, recompensas = [], canje = null, pollT = null, cdT = null;
+const ref = new URLSearchParams(location.search).get("ref");
+const h = new URLSearchParams(location.hash.slice(1));
+if (h.get("t")) { localStorage.setItem("bc_token", h.get("t")); history.replaceState(null, "", location.pathname + location.search); }
+token = localStorage.getItem("bc_token");
+
+function toast(t) { const d = document.createElement("div"); d.className = "toast"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3500); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); }
+function busy(btn, on, label) { if (!btn) return; btn.disabled = on; if (label) btn.textContent = on ? "Un momento…" : label; }
+
+async function loadRecompensas() {
+  const { data: r, error } = await sb.from("recompensas").select("id,nombre,costo_puntos").eq("activa", true).order("orden");
+  if (error) console.error("recompensas:", error);
+  recompensas = r || [];
+}
+
+/* ─── Intro ─── */
+function viewIntro() {
+  stopPoll();
+  app.innerHTML = `
+  <div class="topbar"><a href="index.html">← Beer Garden</a><span>Beer Club</span></div>
+  <section class="pad stack fx-arc" style="position:relative">
+    <div class="fx-badge" style="position:absolute;right:22px;top:26px">+50<br>pts<br>gratis</div>
+    <span class="kick">Programa de socios</span>
+    <h1 class="rise" style="font-size:clamp(46px,14vw,64px);line-height:.9">Beer<br>Club</h1>
+    <p style="font-size:16px;max-width:30ch">Cada visita suma. Muestra tu QR al pagar y canjea tus puntos por cerveza, alitas y picadas.</p>
+    ${ref ? `<p class="small" style="background:var(--amber);border:1px solid var(--ink);padding:8px 10px">Te invitó un amigo · código ${esc(ref.toUpperCase())}</p>` : ""}
+    <div class="stack" style="gap:12px;margin-top:4px">
+      <button class="btn btn-wood" id="go-reg">Únete gratis · +50 pts</button>
+      <button class="link" id="go-in" style="justify-self:start">Ya soy socio, entrar</button>
+    </div>
+  </section>
+  <div class="zig down"></div>
+  <div class="dark fx-outline" aria-hidden="true">
+    <div>Beer Club · 10 pts x $1 · Beer Club · 10 pts x $1 ·&nbsp;</div>
+    <div>Jarras gratis · Alitas · Jarras gratis · Alitas ·&nbsp;</div>
+    <div>Espuma · Lúpulo · Barril · Espuma · Lúpulo · Barril ·&nbsp;</div>
+  </div>
+  <section class="dark pad stack" style="gap:16px;padding-top:6px">
+    <span class="kick">Cómo funciona</span>
+    <div class="step"><b>1</b><div><strong>Regístrate con tu celular</strong><span>Nombre, número y un PIN de 4 dígitos. Sin apps.</span></div></div>
+    <div class="step"><b>2</b><div><strong>Muestra tu QR al pagar</strong><span>10 puntos por cada $1 de consumo.</span></div></div>
+    <div class="step"><b>3</b><div><strong>Canjea cuando quieras</strong><span>Elige tu premio y muéstrale el código al mesero.</span></div></div>
+  </section>
+  <div class="zig"></div>
+  <div class="fx-pills" aria-hidden="true" style="padding:22px 0 4px" id="pills"></div>
+  <section class="pad stack" style="gap:16px">
+    <span class="kick">Junta y reclama</span>
+    <h2 style="font-size:30px;line-height:.95">Tu ruta de premios</h2>
+    <div class="box row" style="padding:12px 16px;background:var(--ink);color:var(--paper)">
+      <span class="small grow" style="letter-spacing:.14em;text-transform:uppercase;opacity:.8">Llevas</span>
+      <span style="font-family:'Space Mono';font-weight:700;font-size:34px;line-height:1;color:var(--amber)"><span id="cnt">50</span> pts</span>
+    </div>
+    <div class="ruta" id="ruta"><i class="fill" id="fill"></i><div class="muted small">Cargando…</div></div>
+    <p class="small muted">Empiezas con 50 pts de regalo. Si vienes seguido sumas más rápido: ×1.25 desde 500 pts y ×1.5 desde 1500.</p>
+  </section>`;
+  document.getElementById("go-reg").onclick = viewRegistro;
+  document.getElementById("go-in").onclick = viewEntrar;
+  loadRecompensas().then(() => {
+    const el = document.getElementById("ruta"); if (!el) return;
+    const p = document.getElementById("pills");
+    if (p && recompensas.length) { const one = recompensas.map(r => `<span class="fx-pill">${esc(r.nombre)}</span>`).join(""); p.innerHTML = `<div class="fx-pills-track">${one}${one}${one}${one}</div>`; }
+    if (!recompensas.length) { el.innerHTML = `<div class="muted small">Pronto.</div>`; return; }
+    el.innerHTML = `<i class="fill" id="fill"></i>` + recompensas.map(r => `
+      <div class="box stop" data-p="${r.costo_puntos}"><span class="dot"></span>
+        <div><strong style="font-family:'Space Mono';font-size:24px;line-height:1;display:block">${r.costo_puntos} pts</strong>
+        <span style="font-size:15px">${esc(r.nombre)}</span><span class="small muted" style="display:block;margin-top:2px">≈ $${Math.ceil((r.costo_puntos - 50) / 10)} de consumo</span></div>
+        <span class="stamp">¡Reclámala!</span></div>`).join("");
+    animarRuta();
+  });
+}
+
+function animarRuta() {
+  const ruta = document.getElementById("ruta"), fill = document.getElementById("fill"), cnt = document.getElementById("cnt");
+  const stops = [...ruta.querySelectorAll(".stop")];
+  const max = +stops[stops.length - 1].dataset.p, START = 50, DUR = 5200, PAUSA = 2600;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pos = () => stops.map(s => ({ p: +s.dataset.p, y: s.offsetTop + s.offsetHeight / 2 }));
+  const draw = v => {
+    const P = pos(); let y = 8;
+    if (v >= P[0].p) { y = P[P.length - 1].y; for (let i = 0; i < P.length - 1; i++) if (v < P[i + 1].p) { y = P[i].y + (P[i + 1].y - P[i].y) * (v - P[i].p) / (P[i + 1].p - P[i].p); break; } }
+    else y = 8 + (P[0].y - 8) * (v - START) / (P[0].p - START);
+    fill.style.height = Math.max(0, y - 8) + "px";
+    cnt.textContent = Math.round(v);
+    stops.forEach(s => s.classList.toggle("on", v >= +s.dataset.p));
+  };
+  if (reduce) { draw(max); return; }
+  let t0 = null, visible = false;
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: .3 }).observe(ruta);
+  const loop = ts => {
+    if (!document.body.contains(ruta)) return;
+    if (!visible) { t0 = null; requestAnimationFrame(loop); return; }
+    if (t0 === null) t0 = ts;
+    const k = (ts - t0) / DUR;
+    if (k <= 1) draw(START + (max - START) * (1 - Math.pow(1 - k, 2)));
+    else if (ts - t0 > DUR + PAUSA) t0 = ts;
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
+
+/* ─── Registro ─── */
+function viewRegistro() {
+  app.innerHTML = `
+  <div class="topbar"><button id="back">← Volver</button><span>Beer Club</span></div>
+  <form class="pad stack" id="f" autocomplete="on">
+    <span class="kick">Paso 1 de 1</span>
+    <h2 style="font-size:32px;line-height:.95">Crea tu tarjeta</h2>
+    <label class="field">Nombre<input class="input" name="nombre" required minlength="2" autocomplete="given-name" placeholder="Ana"></label>
+    <label class="field">Celular<div class="tel"><span>+593</span><input class="input" name="tel" required inputmode="tel" autocomplete="tel-national" placeholder="099 123 4567"></div></label>
+    <label class="field">Crea un PIN de 4 dígitos<input class="input pin" name="pin" required inputmode="numeric" pattern="\\d{4}" maxlength="4" autocomplete="new-password" placeholder="••••"></label>
+    <span class="small muted" style="margin-top:-6px">Lo usarás si cambias de teléfono.</span>
+    <label class="field">Cumpleaños (opcional)<input class="input" name="nac" type="date"></label>
+    <span class="small muted" style="margin-top:-6px">Te regalamos puntos ese día.</span>
+    <label class="check"><input type="checkbox" name="wa" checked>Quiero recibir promos por WhatsApp</label>
+    <div id="e"></div>
+    <button class="btn btn-wood" id="ok">Crear mi tarjeta</button>
+  </form>`;
+  document.getElementById("back").onclick = viewIntro;
+  document.getElementById("f").onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, btn = document.getElementById("ok"), e = document.getElementById("e");
+    e.innerHTML = ""; busy(btn, true, "Crear mi tarjeta");
+    const { data: t, error } = await sb.rpc("registrar_cliente", {
+      p_nombre: f.nombre.value, p_telefono: normTel(f.tel.value), p_pin: f.pin.value,
+      p_fecha_nac: f.nac.value || null, p_acepta_whatsapp: f.wa.checked, p_codigo_referido: ref || null
+    });
+    busy(btn, false, "Crear mi tarjeta");
+    if (error) { e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; return; }
+    token = t; localStorage.setItem("bc_token", t);
+    viewBienvenida(f.nombre.value.trim());
+  };
+}
+
+function viewBienvenida(nombre) {
+  const msg = `Hola Beer Garden 🍺 Me uní al Beer Club.\nNombre: ${nombre}\nMi tarjeta: ${baseUrl}#t=${token}`;
+  app.innerHTML = `
+  <section class="pad stack fx-arc" style="padding-top:48px;gap:18px;position:relative">
+    <div class="fx-badge" style="position:absolute;right:22px;top:30px">Socio<br>nuevo</div>
+    <span class="kick">Listo, ${esc(nombre)}</span>
+    <h1 class="rise" style="font-size:clamp(44px,13vw,58px);line-height:.9">+50 pts<br>de regalo</h1>
+    <p style="font-size:15px">Guarda tu tarjeta en WhatsApp: se abre un chat con nosotros con el enlace ya escrito. Solo dale enviar y siempre la tendrás a mano.</p>
+    <a class="btn btn-grass" href="${wa(TEL_LOCAL, msg)}" target="_blank" rel="noopener">Guardar en WhatsApp</a>
+    <button class="btn btn-paper" id="ver">Ver mi tarjeta</button>
+  </section>`;
+  document.getElementById("ver").onclick = viewTarjeta;
+}
+
+/* ─── Entrar ─── */
+function viewEntrar() {
+  app.innerHTML = `
+  <div class="topbar"><button id="back">← Volver</button><span>Beer Club</span></div>
+  <form class="pad stack" id="f">
+    <span class="kick">Socios</span>
+    <h2 style="font-size:32px;line-height:.95">Entra a tu tarjeta</h2>
+    <label class="field">Celular<div class="tel"><span>+593</span><input class="input" name="tel" required inputmode="tel" autocomplete="tel-national" placeholder="099 123 4567"></div></label>
+    <label class="field">PIN<input class="input pin" name="pin" required inputmode="numeric" pattern="\\d{4}" maxlength="4" autocomplete="current-password" placeholder="••••"></label>
+    <div id="e"></div>
+    <button class="btn btn-wood" id="ok">Entrar</button>
+    <p class="small muted">¿Olvidaste tu PIN? <a href="${wa(TEL_LOCAL, "Hola Beer Garden, olvidé mi PIN del Beer Club.")}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>.</p>
+  </form>`;
+  document.getElementById("back").onclick = viewIntro;
+  document.getElementById("f").onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, btn = document.getElementById("ok"), e = document.getElementById("e");
+    e.innerHTML = ""; busy(btn, true, "Entrar");
+    const { data: t, error } = await sb.rpc("entrar", { p_telefono: normTel(f.tel.value), p_pin: f.pin.value });
+    busy(btn, false, "Entrar");
+    if (error) { e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; return; }
+    token = t; localStorage.setItem("bc_token", t); viewTarjeta();
+  };
+}
+
+/* ─── Tarjeta ─── */
+async function fetchTarjeta() {
+  const { data: d, error } = await sb.rpc("mi_tarjeta", { p_token: token });
+  if (error) throw error;
+  return d;
+}
+
+async function viewTarjeta() {
+  app.innerHTML = `<div class="spin"></div>`;
+  try {
+    [data] = await Promise.all([fetchTarjeta(), loadRecompensas()]);
+  } catch (e) { app.innerHTML = `<div class="pad"><div class="err">${esc(errMsg(e))}</div></div>`; return; }
+  if (!data) { localStorage.removeItem("bc_token"); token = null; viewIntro(); return; }
+  paintTarjeta(); startPoll();
+}
+
+function paintTarjeta() {
+  const d = data, i = NIVELES.findIndex(n => n.id === d.nivel), niv = NIVELES[i], next = NIVELES[i + 1];
+  const pct = next ? Math.min(100, Math.round((d.acumulado - niv.desde) / (next.desde - niv.desde) * 100)) : 100;
+  const qr = qrcode(0, "M"); qr.addData(d.qr); qr.make();
+  const invita = `Únete al Beer Club de Ficoa Beer Garden y gana 50 pts de bienvenida 🍺 ${baseUrl}?ref=${d.codigo_amigo}`;
+  const fecha = s => new Date(s).toLocaleDateString("es-EC", { day: "numeric", month: "short" });
+  const etiqueta = m => m.nota || { compra: "Consumo", canje: "Canje", bono: "Bono", ajuste: "Ajuste", vencimiento: "Vencimiento" }[m.tipo];
+  app.innerHTML = `
+  <div class="topbar"><a href="index.html">← Beer Garden</a><button id="salir">Salir</button></div>
+  <section class="dark card" style="position:relative">
+    <div class="row"><span class="kick grow">Socio · ${esc(d.nombre)}</span><span class="badge">${niv.nombre} ${niv.mult}</span></div>
+    <div><div class="pts" id="pts">${d.puntos}<small>pts</small></div></div>
+    ${next ? "" : `<div class="fx-badge" style="position:absolute;right:20px;top:58px;width:78px;height:78px;font-size:13px">Nivel<br>top</div>`}
+    <div class="stack" style="gap:8px">
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <span class="small" style="opacity:.85">${next ? `Te faltan ${next.desde - d.acumulado} pts acumulados para ${next.nombre}` : "Nivel máximo. Salud."}</span>
+    </div>
+  </section>
+  <div class="zig" style="margin-bottom:22px"></div>
+  <div class="box qr fx-ticket rise">
+    ${qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true })}
+    <span class="small" style="letter-spacing:.14em;text-transform:uppercase;text-align:center">Muéstralo al pagar</span>
+  </div>
+  <section class="pad stack" style="gap:12px;padding-top:30px">
+    <span class="kick">Canjea tus puntos</span>
+    <div class="box list fx-lift" style="padding:4px 16px">
+      ${recompensas.map(r => {
+        const ok = d.puntos >= r.costo_puntos;
+        return `<div><div class="grow"><strong style="font-family:'Space Mono';display:block">${esc(r.nombre)}</strong><span class="small muted">${r.costo_puntos} pts${ok ? "" : " · te faltan " + (r.costo_puntos - d.puntos)}</span></div>
+        <button class="btn btn-sm ${ok ? "btn-wood" : "btn-paper"}" data-r="${r.id}" ${ok ? "" : "disabled"}>Canjear</button></div>`;
+      }).join("") || `<div class="small muted">Pronto.</div>`}
+    </div>
+  </section>
+  <section class="pad stack" style="gap:12px;padding-top:6px">
+    <span class="kick">Invita a un amigo · +100 pts</span>
+    <div class="box fx-ticket fx-lift" style="padding:14px 18px;display:grid;gap:12px">
+      <div class="row"><span class="grow small muted">Tu código</span><strong style="font-family:'Space Mono';font-size:22px;letter-spacing:.12em">${esc(d.codigo_amigo)}</strong></div>
+      <a class="btn btn-grass btn-sm" style="width:100%" href="${wa("", invita)}" target="_blank" rel="noopener">Compartir por WhatsApp</a>
+    </div>
+  </section>
+  <section class="pad stack" style="gap:12px;padding-top:6px">
+    <span class="kick">Movimientos</span>
+    <div class="list">
+      ${(d.historial || []).map(m => `<div><span class="small muted" style="width:52px">${fecha(m.creado_en)}</span><span class="grow">${esc(etiqueta(m))}</span><span class="${m.puntos >= 0 ? "plus" : "minus"}">${m.puntos >= 0 ? "+" : ""}${m.puntos}</span></div>`).join("") || `<div class="small muted">Aún no hay movimientos.</div>`}
+    </div>
+  </section>`;
+  document.getElementById("salir").onclick = () => { if (confirm("¿Salir de tu tarjeta en este teléfono?")) { localStorage.removeItem("bc_token"); token = null; viewIntro(); } };
+  app.querySelectorAll("[data-r]").forEach(b => b.onclick = () => pedirCanje(+b.dataset.r, b));
+}
+
+async function pedirCanje(id, btn) {
+  const r = recompensas.find(x => x.id === id);
+  if (!confirm(`¿Canjear ${r.nombre} por ${r.costo_puntos} pts?`)) return;
+  btn.disabled = true;
+  const { data: c, error } = await sb.rpc("solicitar_canje", { p_token: token, p_recompensa: id });
+  btn.disabled = false;
+  if (error) { alert(errMsg(error)); return; }
+  canje = { ...c, nombre: r.nombre };
+  paintCanje();
+}
+
+function paintCanje() {
+  closeCanje(false);
+  const m = document.createElement("div"); m.className = "modal"; m.id = "modal";
+  m.innerHTML = `<div class="ticket">
+    <span class="kick">Canje · ${esc(canje.nombre)}</span>
+    <span class="code">${esc(canje.codigo)}</span>
+    <span class="small muted">Muéstrale este código al mesero</span>
+    <div class="cut"></div>
+    <span id="cd" style="font-family:'Space Mono';font-size:20px;font-weight:700"></span>
+    <button class="link" id="cerrar">Cerrar</button>
+  </div>`;
+  document.body.appendChild(m);
+  m.querySelector("#cerrar").onclick = () => closeCanje(true);
+  const tick = () => {
+    const s = Math.max(0, Math.round((new Date(canje.expira_en) - Date.now()) / 1000));
+    const el = document.getElementById("cd"); if (!el) return;
+    el.textContent = s ? `Vence en ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : "Código vencido";
+    if (!s) clearInterval(cdT);
+  };
+  tick(); cdT = setInterval(tick, 1000);
+}
+function closeCanje(clear) { clearInterval(cdT); const m = document.getElementById("modal"); if (m) m.remove(); if (clear) canje = null; }
+
+function startPoll() {
+  stopPoll();
+  pollT = setInterval(async () => {
+    if (document.visibilityState !== "visible" || !token) return;
+    try {
+      const d = await fetchTarjeta(); if (!d) return;
+      const diff = d.puntos - data.puntos;
+      if (diff === 0 && d.nivel === data.nivel) return;
+      const subio = d.nivel !== data.nivel;
+      data = d; paintTarjeta();
+      if (diff > 0) { toast(`+${diff} pts 🍺`); const el = document.getElementById("pts"); if (el) el.classList.add("bump"); }
+      if (diff < 0 && canje) { closeCanje(true); toast("¡Salud! Canje listo"); }
+      if (subio && diff > 0) setTimeout(() => toast(`Nivel ${NIVELES.find(n => n.id === d.nivel).nombre}`), 3600);
+      if (canje) paintCanje();
+    } catch (_) {}
+  }, 4000);
+}
+function stopPoll() { clearInterval(pollT); }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && token && data) startPoll(); });
+
+token ? viewTarjeta() : viewIntro();
+</script>
+</body>
+</html>
