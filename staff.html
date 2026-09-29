@@ -37,9 +37,15 @@ p{margin:0;line-height:1.5}
 .ok{background:#dfe8d6;border:1px solid var(--green);padding:18px 16px;display:grid;gap:6px}
 .topbar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
 .topbar button{color:var(--paper);background:none;border:0;font:inherit;letter-spacing:inherit;cursor:pointer;padding:6px 0}
-.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:1px;background:var(--ink);position:sticky;top:0;z-index:5}
-.tabs button{border:0;padding:14px 4px;font:500 12px "DM Mono",monospace;letter-spacing:.1em;text-transform:uppercase;background:var(--bg);color:var(--ink);cursor:pointer;min-height:48px}
-.tabs button[aria-selected="true"]{background:var(--amber);font-weight:700}
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;padding:10px;background:var(--ink);position:sticky;top:0;z-index:5}
+.tabs button{border:1px solid var(--paper);border-radius:10px;padding:10px 4px 9px;font:500 11px "DM Mono",monospace;letter-spacing:.04em;background:transparent;color:var(--paper);cursor:pointer;min-height:84px;display:grid;justify-items:center;align-content:center;gap:4px;text-align:center;transition:background-color .15s,transform .12s}
+.tabs button svg{width:26px;height:26px}
+.tabs button strong{font:700 14px "Space Mono",monospace;text-transform:uppercase;letter-spacing:0}
+.tabs button span{opacity:.75;line-height:1.2}
+.tabs button:hover{background:rgba(246,243,233,.1)}
+.tabs button:active{transform:translateY(2px)}
+.tabs button[aria-selected="true"]{background:var(--amber);border-color:var(--amber);color:var(--ink);box-shadow:0 4px 0 #b3842a}
+.tabs button[aria-selected="true"] span{opacity:.85}
 .row{display:flex;align-items:center;gap:12px}
 .grow{flex:1;min-width:0}
 .muted{color:var(--muted)}
@@ -116,10 +122,15 @@ async function boot() {
 }
 
 function shell() {
-  const tabs = [["sumar", "Sumar"], ["canjear", "Canjear"]].concat(yo.rol === "admin" ? [["panel", "Panel"]] : []);
+  const ic = {
+    sumar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></svg>',
+    canjear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4"/><path d="M5 12v9h14v-9M12 8v13M12 8S10.5 3 8 4s0 4 4 4c4 0 6.5-3 4-4s-4 4-4 4"/></svg>',
+    panel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
+  };
+  const tabs = [["sumar", "Sumar puntos", "Escanear QR"], ["canjear", "Canjear", "Entregar premio"]].concat(yo.rol === "admin" ? [["panel", "Panel", "Ver resumen"]] : []);
   app.innerHTML = `
   <div class="topbar"><span class="grow">Hola, ${esc(yo.nombre)}</span><button id="out">Salir</button></div>
-  <nav class="tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-selected="${tab === k}" data-t="${k}">${l}</button>`).join("")}</nav>
+  <nav class="tabs" role="tablist">${tabs.map(([k, l, s]) => `<button role="tab" aria-selected="${tab === k}" data-t="${k}">${ic[k]}<strong>${l}</strong><span>${s}</span></button>`).join("")}</nav>
   <main id="view"></main>`;
   document.getElementById("out").onclick = async () => { await stopScan(); await sb.auth.signOut(); sessionStorage.removeItem("bc_tab"); viewLogin(); };
   app.querySelectorAll("[data-t]").forEach(b => b.onclick = async () => { await stopScan(); tab = b.dataset.t; sessionStorage.setItem("bc_tab", tab); shell(); });
