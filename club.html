@@ -122,7 +122,6 @@ html.hw{--ink:#252525;--paper:#f3f3f3;--bg:#040404;--amber:#ff6c02;--green:#ff6c
 html.hw body{background:transparent;color:#f3f3f3;font-family:"Geist",ui-sans-serif,system-ui,sans-serif}
 html.hw body::before{content:"";position:fixed;inset:-25%;z-index:-2;pointer-events:none;background:radial-gradient(38% 30% at 22% 12%,rgba(255,108,2,.22),transparent 70%),radial-gradient(30% 26% at 85% 70%,rgba(255,155,81,.08),transparent 70%),#040404;animation:hw-ember 60s ease-in-out infinite alternate}
 html.hw body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.3;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-html.hw::before{content:"";position:fixed;top:0;bottom:0;left:max(8px,calc(50% - 222px));width:1px;background:#ff6c02;opacity:.5;z-index:5;pointer-events:none}
 @keyframes hw-ember{0%{transform:translate(0,0)}100%{transform:translate(5%,4%)}}
 html.hw a{color:#f3f3f3}html.hw a:hover{color:#ff9b51}
 html.hw .wrap{background:transparent}
@@ -169,8 +168,8 @@ html.hw .btn-wood{background:#ff6c02;color:#040404;border:2px solid #ffd2a8;box-
 html.hw .btn-wood:hover{background:#ff9b51;border-color:#fff1e3;box-shadow:0 0 0 1px #ff9b51,0 0 14px 3px rgba(255,140,40,1),0 0 34px 10px rgba(255,108,2,.7),0 0 70px 18px rgba(255,108,2,.35),inset 0 0 12px rgba(255,230,205,.7)}
 @keyframes hw-neon{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
 @property --hw-a{syntax:"<angle>";inherits:false;initial-value:0deg}
-html.hw .btn-grass,html.hw .btn-paper{border:1.5px solid transparent;background:linear-gradient(180deg,#1c1c1c,#0c0c0c) padding-box,conic-gradient(from var(--hw-a),#5a5a5a 0deg,#f4f4f4 40deg,#7a7a7a 85deg,#2a2a2a 140deg,#ffb070 175deg,#3a3a3a 210deg,#e6e6e6 260deg,#55c2ff 300deg,#5a5a5a 360deg) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 6px rgba(255,255,255,.06);color:#ececec;animation:hw-metal 8s linear infinite}
-html.hw .btn-grass:hover,html.hw .btn-paper:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 10px rgba(255,255,255,.14);color:#fff;animation-duration:3s}
+html.hw .btn-grass,html.hw .btn-paper{border:1.5px solid transparent;background:linear-gradient(180deg,#1c1c1c,#0c0c0c) padding-box,conic-gradient(from var(--hw-a),#3b1f5c 0deg,#e3c8ff 40deg,#8a5cc4 85deg,#2a1640 140deg,#c79bff 175deg,#4a2a78 210deg,#f0e0ff 260deg,#9d6bff 300deg,#3b1f5c 360deg) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 8px rgba(167,112,255,.35);color:#ececec;animation:hw-metal 8s linear infinite}
+html.hw .btn-grass:hover,html.hw .btn-paper:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 14px rgba(167,112,255,.6);color:#fff;animation-duration:3s}
 html.hw .btn:disabled{animation:none;box-shadow:none;opacity:.4}
 @keyframes hw-metal{to{--hw-a:360deg}}
 @media (prefers-reduced-motion:reduce){html.hw body::before,html.hw .btn{animation:none}}
