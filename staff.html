@@ -153,16 +153,17 @@ function viewScan() {
     </details>
   </section>`;
   document.getElementById("man").onsubmit = ev => { ev.preventDefault(); const v = ev.target.c.value.trim(); if (v) buscar(v); };
-  scanner = new Html5Qrcode("reader");
-  scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 220 } }, async txt => { await stopScan(); buscar(txt.trim()); }, () => {})
+  scanner = new Html5Qrcode("reader", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
+  scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.8); return { width: s, height: s }; } }, async txt => { await stopScan(); buscar(txt.trim()); }, () => {})
     .catch(() => { document.getElementById("e").innerHTML = `<div class="err">No se pudo abrir la cámara. Da permiso en el navegador o escribe el código abajo.</div>`; });
 }
 
 async function buscar(qr) {
-  const token = qr.includes("#t=") ? qr.split("#t=")[1] : qr;
+  const token = (qr.includes("#t=") ? qr.split("#t=")[1] : qr).split(/[?&\s]/)[0].trim().toLowerCase();
   V().innerHTML = `<div class="spin"></div>`;
-  const { data: c } = await sb.from("clientes").select("id,nombre,qr_token").eq("qr_token", token).maybeSingle();
-  if (!c) { viewScan(); document.getElementById("e").innerHTML = `<div class="err">QR no válido.</div>`; return; }
+  const { data: c, error: qe } = await sb.from("clientes").select("id,nombre,qr_token").eq("qr_token", token).maybeSingle();
+  if (qe) { viewScan(); document.getElementById("e").innerHTML = `<div class="err">Error al buscar: ${esc(qe.message)}</div>`; return; }
+  if (!c) { viewScan(); document.getElementById("e").innerHTML = `<div class="err">QR no válido (${esc(token.slice(0, 8))}…).</div>`; return; }
   const { data: s } = await sb.from("saldos").select("puntos,nivel").eq("cliente_id", c.id).maybeSingle();
   sel = { ...c, ...(s || { puntos: 0, nivel: "espuma" }) };
   viewMonto();

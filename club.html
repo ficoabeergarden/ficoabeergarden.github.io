@@ -95,7 +95,7 @@ p{margin:0;line-height:1.5;text-wrap:pretty}
 .bar i{display:block;height:100%;background:var(--amber);transition:width .6s}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--amber);color:var(--amber);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
 .qr{padding:18px;display:grid;justify-items:center;gap:10px;margin:0 20px}
-.qr svg{width:220px;height:220px;display:block}
+.qr svg{width:240px;height:240px;display:block;background:#fff;padding:14px;border-radius:10px;box-sizing:content-box}
 .list{display:grid}
 .list>div{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .list>div:first-child{border-top:0}
@@ -407,7 +407,7 @@ function paintTarjeta() {
   </section>
   <div class="zig" style="margin-bottom:22px"></div>
   <div class="box qr fx-ticket rise">
-    ${qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true })}
+    ${qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true })}
     <span class="small" style="letter-spacing:.14em;text-transform:uppercase;text-align:center">Muéstralo al pagar</span>
   </div>
   <section class="pad stack" style="gap:12px;padding-top:30px">
