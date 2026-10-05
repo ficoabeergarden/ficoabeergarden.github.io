@@ -178,6 +178,7 @@ html.hw .btn:disabled{animation:none;box-shadow:none;opacity:.4}
 <style>
 .ev{padding:16px 18px;display:grid;gap:10px}
 .ev h3{font-size:22px;line-height:1}
+.flyer{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;border-radius:10px;background:var(--bg)}
 .date{display:inline-flex;align-self:start;justify-self:start;padding:5px 10px;border-radius:999px;background:var(--amber);color:var(--ink);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
 .tag{display:inline-flex;align-items:center;padding:4px 9px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid currentColor;white-space:nowrap}
 .tag.ok{color:var(--green)}.tag.wait{color:#8a5a00}.tag.no{color:#8a2b12}
@@ -276,6 +277,7 @@ async function viewLista() {
     ${mios.length ? `<span class="kick">Eventos</span>` : ""}
     ${evs.map(ev => { const desde = Math.min(...ev.tipos.map(t => +t.precio)); const agot = ev.tipos.every(t => t.disponibles === 0);
       return `<div class="box ev">
+        ${ev.foto_url ? `<a href="?e=${esc(ev.slug)}"><img class="flyer" src="${esc(ev.foto_url)}" alt="${esc(ev.nombre)}" loading="lazy"></a>` : ""}
         <span class="date">${fFecha(ev.fecha)} · ${fHora(ev.fecha)}</span>
         <h3>${esc(ev.nombre)}</h3>
         ${ev.descripcion ? `<p class="small muted">${esc(ev.descripcion)}</p>` : ""}
@@ -299,6 +301,7 @@ async function viewComprar(slug) {
   app.innerHTML = `
   <div class="topbar"><a href="agenda.html">← Agenda</a><span>Entradas</span></div>
   <section class="pad stack" style="gap:10px">
+    ${ev.foto_url ? `<img class="flyer" src="${esc(ev.foto_url)}" alt="${esc(ev.nombre)}" style="max-width:320px">` : ""}
     <span class="date">${fFecha(ev.fecha)} · ${fHora(ev.fecha)}</span>
     <h1 style="font-size:clamp(34px,10vw,46px);line-height:.95">${esc(ev.nombre)}</h1>
     ${ev.descripcion ? `<p class="muted">${esc(ev.descripcion)}</p>` : ""}
