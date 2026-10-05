@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda · Ficoa Beer Garden</title>
+<meta name="theme-color" content="#17150f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17150f;--paper:#f6f3e9;--bg:#e9e5d9;--amber:#e8b246;--green:#2f5d34;--wood:#2e2116;--grass:#3f6b3a;--muted:rgba(23,21,15,.72);--line:rgba(23,21,15,.22)}
+*{box-sizing:border-box}
+body{margin:0;background:#d8d2c2;color:var(--ink);font-family:"DM Mono",ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+a{color:var(--ink)}a:hover{color:#3d382c}
+.wrap{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);padding-bottom:40px}
+h1,h2,h3{font-family:"Space Mono",ui-monospace,monospace;font-weight:700;letter-spacing:-.02em;text-transform:uppercase;margin:0}
+p{margin:0;line-height:1.5;text-wrap:pretty}
+.pad{padding:24px 20px}
+.stack{display:grid;gap:14px}
+.kick{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--green)}
+.dark .kick{color:var(--amber)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;padding:0 22px;border-radius:12px;font:500 15px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid var(--ink);box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 0 var(--ink)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:0 5px 0 var(--ink)}
+.btn-wood{background-color:var(--wood);background-image:linear-gradient(rgba(20,12,4,.34),rgba(20,12,4,.34)),url("bgc/tex-madera.jpg");background-size:auto,cover;background-position:center;color:#f7f2e6;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.btn-grass{background-color:var(--grass);background-image:linear-gradient(rgba(10,26,8,.3),rgba(10,26,8,.3)),url("bgc/tex-cesped.jpg");background-size:auto,cover;background-position:center;color:#f4f7e8;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.fx-outline{overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:18px 0}
+.fx-outline>div{white-space:nowrap;font-family:"Space Mono";font-weight:700;font-size:clamp(40px,11vw,58px);line-height:1.05;text-transform:uppercase;color:transparent;-webkit-text-stroke:1.5px rgba(246,243,233,.3);animation:slide 40s linear infinite;width:max-content}
+.fx-outline>div:nth-child(2){-webkit-text-stroke-color:var(--paper);animation-direction:reverse}
+.fx-outline>div:nth-child(3){-webkit-text-stroke-color:color-mix(in srgb,var(--amber) 70%,transparent)}
+@keyframes slide{to{transform:translateX(-50%)}}
+.fx-pills{display:flex;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)}
+.fx-pills-track{display:flex;gap:10px;flex:none;animation:slide 26s linear infinite;padding-right:10px}
+.fx-pill{flex:none;white-space:nowrap;font-family:"Space Mono";font-weight:700;font-size:26px;line-height:1;text-transform:uppercase;letter-spacing:-.02em;padding:9px 20px 11px;border-radius:999px;border:2px solid var(--ink);background:var(--ink);color:var(--amber)}
+.fx-pill:nth-child(even){background:transparent;color:var(--ink)}
+.fx-badge{width:92px;height:92px;border-radius:50%;background:var(--amber);color:var(--ink);border:2px solid var(--ink);display:grid;place-items:center;text-align:center;font-family:"Space Mono";font-weight:700;font-size:15px;line-height:1.05;text-transform:uppercase;transform:rotate(12deg);box-shadow:0 5px 0 var(--ink);animation:wob 3.5s ease-in-out infinite}
+@keyframes wob{50%{transform:rotate(4deg) scale(1.05)}}
+.fx-lift{transition:transform .15s}.fx-lift:hover{transform:translateY(-3px) rotate(-.4deg)}
+.fx-arc{position:relative;isolation:isolate;overflow:hidden}
+.fx-arc:before{content:"";position:absolute;z-index:-1;width:520px;height:520px;right:-360px;top:-140px;border-radius:50%;border:80px solid var(--grass);opacity:.14;pointer-events:none}
+.fx-ticket{position:relative;border-radius:14px}
+.fx-ticket:before,.fx-ticket:after{content:"";position:absolute;top:50%;width:24px;height:24px;margin-top:-12px;border-radius:50%;background:var(--bg);border:1px solid var(--ink)}
+.fx-ticket:before{left:-13px;clip-path:inset(0 0 0 50%)}.fx-ticket:after{right:-13px;clip-path:inset(0 50% 0 0)}
+.ruta{position:relative;display:grid;gap:14px;padding-left:36px}
+.ruta:before{content:"";position:absolute;left:12px;top:8px;bottom:8px;width:4px;background:var(--line)}
+.ruta .fill{position:absolute;left:12px;top:8px;width:4px;height:0;background:var(--amber);box-shadow:0 0 0 1px var(--ink)}
+.stop{position:relative;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;transition:transform .3s,background-color .3s}
+.stop .dot{position:absolute;left:-33px;top:50%;margin-top:-11px;width:22px;height:22px;border-radius:50%;background:var(--bg);border:2px solid var(--ink);transition:transform .3s,background-color .3s}
+.stop.on{background:#fbefcf;transform:translateX(4px)}
+.stop.on .dot{background:var(--amber);transform:scale(1.2)}
+.stamp{font-family:"Space Mono";font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:2px solid var(--green);color:var(--green);padding:5px 8px;opacity:0;transform:rotate(-8deg) scale(1.7);transition:opacity .25s,transform .35s cubic-bezier(.3,1.7,.5,1);white-space:nowrap}
+.stop.on .stamp{opacity:1;transform:rotate(-8deg) scale(1)}
+.rise{animation:rise .5s both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.pts{display:inline-block}
+.bump{animation:bump .6s}
+@keyframes bump{30%{transform:scale(1.14);color:var(--amber)}}
+.bar i{background:repeating-linear-gradient(-45deg,var(--amber) 0 10px,#f0c66a 10px 20px);background-size:28px 28px;animation:stripes 1s linear infinite}
+@keyframes stripes{to{background-position:28px 0}}
+@media (prefers-reduced-motion:reduce){.fx-outline>div,.fx-pills-track,.fx-badge,.bar i,.rise{animation:none}}
+.btn-paper{background:var(--paper);color:var(--ink)}
+.btn-sm{min-height:44px;width:auto;padding:0 14px;font-size:12px;box-shadow:0 3px 0 var(--ink)}
+.btn-sm:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.link{background:none;border:0;padding:8px 0;font:500 13px "DM Mono",monospace;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--ink)}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.field{display:grid;gap:6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.input{width:100%;min-height:54px;padding:0 14px;font:17px "DM Mono",monospace;background:var(--paper);border:1px solid var(--ink);border-radius:0;color:var(--ink)}
+.tel{display:grid;grid-template-columns:auto 1fr;border:1px solid var(--ink);background:var(--paper)}
+.tel span{display:grid;place-items:center;padding:0 12px;border-right:1px solid var(--ink);font-size:16px}
+.tel .input{border:0}
+.pin{letter-spacing:.6em;font-size:24px;text-align:center}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4}
+.check input{width:20px;height:20px;margin:0;accent-color:var(--green)}
+.box{border:1px solid var(--ink);box-shadow:0 5px 0 var(--ink);background:var(--paper)}
+.dark{background:var(--ink);color:var(--paper)}
+.zig{height:16px;background:linear-gradient(-45deg,var(--ink) 8px,transparent 0) 0 100%/16px 16px repeat-x,linear-gradient(45deg,var(--ink) 8px,transparent 0) 0 100%/16px 16px repeat-x}
+.zig.down{transform:scaleY(-1)}
+.err{background:#f3dccf;border:1px solid #8a2b12;color:#6d200c;padding:10px 12px;font-size:13px;line-height:1.4}
+.step{display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start}
+.step b{font-family:"Space Mono";font-size:26px;color:var(--amber);line-height:1}
+.step strong{font-family:"Space Mono";font-size:15px;display:block;margin-bottom:3px}
+.step span{font-size:13px;opacity:.82;line-height:1.45}
+.row{display:flex;align-items:center;gap:12px}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+.topbar a,.topbar button{color:var(--paper);background:none;border:0;font:inherit;letter-spacing:inherit;cursor:pointer;text-decoration:none;padding:6px 0}
+.card{padding:22px 20px 20px;display:grid;gap:14px}
+.pts{font-family:"Space Mono";font-weight:700;font-size:64px;line-height:.9;letter-spacing:-.04em}
+.pts small{font-size:18px;letter-spacing:0;margin-left:6px}
+.bar{height:12px;border:1px solid var(--paper);background:transparent}
+.bar i{display:block;height:100%;background:var(--amber);transition:width .6s}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--amber);color:var(--amber);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.qr{padding:18px;display:grid;justify-items:center;gap:10px;margin:0 20px}
+.qr svg{width:240px;height:240px;display:block;background:#fff;padding:14px;border-radius:10px;box-sizing:content-box}
+.list{display:grid}
+.list>div{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.list>div:first-child{border-top:0}
+.plus{color:var(--green);font-family:"Space Mono";font-weight:700}
+.minus{color:#8a2b12;font-family:"Space Mono";font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(23,21,15,.78);display:grid;place-items:center;padding:20px;z-index:40}
+.ticket{position:relative;width:min(340px,100%);background:var(--paper);border:1px solid var(--ink);border-radius:14px;box-shadow:0 10px 0 var(--ink);padding:24px 22px;display:grid;gap:14px;text-align:center}
+.ticket:before,.ticket:after{content:"";position:absolute;top:56%;width:26px;height:26px;border-radius:50%;background:#403a2e;border:1px solid var(--ink)}
+.ticket:before{left:-14px;clip-path:inset(0 0 0 50%)}.ticket:after{right:-14px;clip-path:inset(0 50% 0 0)}
+.code{font-family:"Space Mono";font-weight:700;font-size:52px;letter-spacing:.14em;line-height:1}
+.cut{border-top:2px dashed rgba(23,21,15,.3);margin:0 -6px}
+.toast{position:fixed;left:50%;bottom:28px;background:var(--amber);color:var(--ink);border:2px solid var(--ink);box-shadow:0 6px 0 var(--ink);padding:14px 24px;font:700 24px "Space Mono",monospace;z-index:60;white-space:nowrap;animation:pop 3.4s forwards}
+@keyframes pop{0%{transform:translate(-50%,24px) scale(.9);opacity:0}12%{transform:translate(-50%,0) scale(1.06);opacity:1}22%{transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
+.lvl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:14px 16px;align-items:baseline}
+.lvl strong{font-family:"Space Mono";font-size:19px;text-transform:uppercase}
+.lvl em{font-style:normal;font-family:"Space Mono";font-weight:700;color:var(--green)}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:sp 0.8s linear infinite;margin:60px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none;transform:translateX(-50%)}}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html.hw{--ink:#252525;--paper:#f3f3f3;--bg:#040404;--amber:#ff6c02;--green:#ff6c02;--grass:#ff6c02;--muted:#a8a8a8;--line:#303030;background:#040404}
+html.hw body{background:transparent;color:#f3f3f3;font-family:"Geist",ui-sans-serif,system-ui,sans-serif}
+html.hw body::before{content:"";position:fixed;inset:-25%;z-index:-2;pointer-events:none;background:radial-gradient(38% 30% at 22% 12%,rgba(255,108,2,.22),transparent 70%),radial-gradient(30% 26% at 85% 70%,rgba(255,155,81,.08),transparent 70%),#040404;animation:hw-ember 60s ease-in-out infinite alternate}
+html.hw body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.3;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+@keyframes hw-ember{0%{transform:translate(0,0)}100%{transform:translate(5%,4%)}}
+html.hw a{color:#f3f3f3}html.hw a:hover{color:#ff9b51}
+html.hw .wrap{background:transparent}
+html.hw h1,html.hw h2,html.hw h3,html.hw .step b,html.hw .step strong,html.hw .pts,html.hw .code,html.hw .lvl strong,html.hw .fx-outline>div,html.hw .fx-pill,html.hw .fx-badge{font-family:"Geist",ui-sans-serif,system-ui,sans-serif!important;font-weight:600;letter-spacing:-.04em;text-transform:none}
+html.hw [style*="Space Mono"]{font-family:"Geist",ui-sans-serif,system-ui,sans-serif!important;font-weight:600}
+html.hw .topbar{background:#000;color:#f3f3f3;border-bottom:1px solid #303030}
+html.hw .topbar a,html.hw .topbar button{color:#f3f3f3}
+html.hw .dark{background:#000!important;color:#f3f3f3}
+html.hw .zig{height:1px;background:#303030;transform:none}
+html.hw .box{background:#0c0c0c!important;color:#f3f3f3!important;border:1px solid #252525;box-shadow:none;border-radius:12px}
+html.hw .fx-outline>div{-webkit-text-stroke-color:rgba(243,243,243,.16)}
+html.hw .fx-outline>div:nth-child(2){-webkit-text-stroke-color:#646464}
+html.hw .fx-outline>div:nth-child(3){-webkit-text-stroke-color:rgba(255,108,2,.7)}
+html.hw .fx-pill{border:1px solid #ff6c02;background:transparent;color:#ff6c02}
+html.hw .fx-pill:nth-child(even){border-color:#303030;color:#dedede}
+html.hw .fx-badge{background:#ff6c02;color:#040404;border:none;box-shadow:0 0 18px rgba(255,108,2,.55)}
+html.hw .fx-arc:before{opacity:.07}
+html.hw .fx-ticket:before,html.hw .fx-ticket:after{background:#040404;border-color:#252525}
+html.hw .ruta .fill{box-shadow:0 0 10px rgba(255,108,2,.8)}
+html.hw .stop .dot{background:#040404;border-color:#303030}
+html.hw .stop.on{background:rgba(255,108,2,.12)!important}
+html.hw .stop.on .dot{background:#ff6c02;box-shadow:0 0 10px rgba(255,108,2,.9)}
+html.hw .stamp{border-color:#ff6c02;color:#ff6c02}
+html.hw .bar{border-color:#303030}
+html.hw .badge{border-color:#ff6c02;color:#ff6c02}
+html.hw .minus{color:#ff8a7a}
+html.hw .link{color:#dedede}
+html.hw .input,html.hw .tel{background:#0c0c0c;border:1px solid #252525;border-radius:8px;color:#f3f3f3}
+html.hw .tel .input{border:0}
+html.hw .tel span{border-right-color:#252525}
+html.hw .input:focus{outline:none;border-color:#ff6c02}
+html.hw :focus-visible{outline-color:#ff6c02}
+html.hw .err{background:#2a0c06;border-color:#ff6b4a;color:#ffc2b3}
+html.hw .modal{background:rgba(0,0,0,.82)}
+html.hw .ticket{background:#121212;color:#f3f3f3;border-color:#252525;box-shadow:0 0 30px rgba(255,108,2,.25)}
+html.hw .ticket:before,html.hw .ticket:after{background:#000;border-color:#252525}
+html.hw .cut{border-top-color:#303030}
+html.hw .spin{border-color:#303030;border-top-color:#ff6c02}
+html.hw .toast{background:#ff6c02;color:#040404;border:2px solid #ffd2a8;box-shadow:0 0 12px 2px rgba(255,108,2,.9),0 0 34px 8px rgba(255,108,2,.45)}
+html.hw [style*="background:var(--amber)"]{color:#040404}
+html.hw .btn{border-radius:4px;letter-spacing:0;text-transform:none;font-family:"Geist",ui-sans-serif,system-ui,sans-serif;font-weight:500;box-shadow:none;text-shadow:none}
+html.hw .btn:hover,html.hw .btn:active{transform:none}
+html.hw .btn-wood{background:#ff6c02;color:#040404;border:2px solid #ffd2a8;box-shadow:0 0 0 1px #ff6c02,0 0 10px 2px rgba(255,108,2,.95),0 0 26px 6px rgba(255,108,2,.6),0 0 52px 12px rgba(255,108,2,.3),inset 0 0 10px rgba(255,210,168,.55);animation:hw-neon 3.2s ease-in-out infinite}
+html.hw .btn-wood:hover{background:#ff9b51;border-color:#fff1e3;box-shadow:0 0 0 1px #ff9b51,0 0 14px 3px rgba(255,140,40,1),0 0 34px 10px rgba(255,108,2,.7),0 0 70px 18px rgba(255,108,2,.35),inset 0 0 12px rgba(255,230,205,.7)}
+@keyframes hw-neon{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
+@property --hw-a{syntax:"<angle>";inherits:false;initial-value:0deg}
+html.hw .btn-grass,html.hw .btn-paper{border:1.5px solid transparent;background:linear-gradient(180deg,#1c1c1c,#0c0c0c) padding-box,conic-gradient(from var(--hw-a),#3b1f5c 0deg,#e3c8ff 40deg,#8a5cc4 85deg,#2a1640 140deg,#c79bff 175deg,#4a2a78 210deg,#f0e0ff 260deg,#9d6bff 300deg,#3b1f5c 360deg) border-box;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 8px rgba(167,112,255,.35);color:#ececec;animation:hw-metal 8s linear infinite}
+html.hw .btn-grass:hover,html.hw .btn-paper:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 14px rgba(167,112,255,.6);color:#fff;animation-duration:3s}
+html.hw .btn:disabled{animation:none;box-shadow:none;opacity:.4}
+@keyframes hw-metal{to{--hw-a:360deg}}
+@media (prefers-reduced-motion:reduce){html.hw body::before,html.hw .btn{animation:none}}
+</style>
+<script>(function(){var p=new URLSearchParams(location.search).get('hw'),d=new Date(),m=d.getMonth(),n=d.getDate();var on=p?p==='1':(m===9||(m===8&&n>=25)||(m===10&&n<=1));document.documentElement.classList.toggle('hw',on)})();</script>
+<style>
+.ev{padding:16px 18px;display:grid;gap:10px}
+.ev h3{font-size:22px;line-height:1}
+.date{display:inline-flex;align-self:start;justify-self:start;padding:5px 10px;border-radius:999px;background:var(--amber);color:var(--ink);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;padding:4px 9px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:1px solid currentColor;white-space:nowrap}
+.tag.ok{color:var(--green)}.tag.wait{color:#8a5a00}.tag.no{color:#8a2b12}
+.stepper{display:grid;grid-template-columns:44px 40px 44px;align-items:center;text-align:center}
+.stepper button{width:44px;height:44px;border:1px solid var(--ink);background:var(--paper);font:700 22px "Space Mono",monospace;cursor:pointer;color:var(--ink);border-radius:8px}
+.stepper button:disabled{opacity:.35;cursor:not-allowed}
+.stepper b{font-family:"Space Mono";font-size:20px}
+.pago{white-space:pre-wrap;font-size:15px;line-height:1.5;padding:14px 16px}
+.ent{position:relative}
+.ent.usada svg{opacity:.18}
+.ent .sello{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) rotate(-10deg);border:3px solid #8a2b12;color:#8a2b12;padding:8px 14px;font:700 20px "Space Mono",monospace;text-transform:uppercase;background:var(--paper);white-space:nowrap}
+.offline{background:var(--amber);color:var(--ink);text-align:center;font-size:12px;padding:8px 12px;letter-spacing:.06em}
+html.hw .tag.wait{color:#ffb36b}html.hw .tag.no{color:#ff8a7a}
+html.hw .stepper button{background:#0c0c0c;border-color:#303030;color:#f3f3f3}
+html.hw .ent .sello{background:#0c0c0c;border-color:#ff6b4a;color:#ff8a7a}
+html.hw .offline{background:#ff6c02;color:#040404}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="spin"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+const SB_URL = "https://jukpaqtriemqvxormrgb.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1a3BhcXRyaWVtcXZ4b3JtcmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzODY1ODQsImV4cCI6MjEwNTk2MjU4NH0.4PPIVK2HvvgwrGEtNVn7CozqDCldvlFWnK2rpgrOmHE";
+const TEL_LOCAL = "593984551000";
+const sb = supabase.createClient(SB_URL, SB_KEY, { db: { schema: "beerclub" }, auth: { persistSession: false } });
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+const app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const wa = (tel, t) => "https://wa.me/" + (tel || "") + "?text=" + encodeURIComponent(t);
+const base = location.origin + location.pathname;
+const normTel = v => { let d = String(v).replace(/\D/g, ""); if (d.startsWith("593")) return d; if (d.startsWith("0")) d = d.slice(1); return "593" + d; };
+const errMsg = e => (e && e.message ? e.message.replace(/^.*?:\s*/, "") : "Algo salió mal. Intenta otra vez.");
+const money = n => "$" + Number(n).toFixed(2).replace(/\.00$/, "");
+const fFecha = s => new Date(s).toLocaleDateString("es-EC", { weekday: "short", day: "numeric", month: "short" });
+const fHora = s => new Date(s).toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit" });
+const club = localStorage.getItem("bc_token");
+const getPeds = () => JSON.parse(localStorage.getItem("bc_pedidos") || "[]");
+const addPed = t => { const l = getPeds().filter(x => x !== t); l.unshift(t); localStorage.setItem("bc_pedidos", JSON.stringify(l.slice(0, 30))); };
+const cacheSet = (k, v) => { try { localStorage.setItem("bc_c_" + k, JSON.stringify(v)); } catch (_) {} };
+const cacheGet = k => { try { return JSON.parse(localStorage.getItem("bc_c_" + k)); } catch (_) { return null; } };
+const qrSvg = codigo => { const q = qrcode(0, "M"); q.addData("BGE:" + codigo); q.make(); return q.createSvgTag({ cellSize: 6, margin: 4, scalable: true }); };
+const offBar = on => on ? `<div class="offline">Sin conexión · mostrando lo guardado en este teléfono</div>` : "";
+let pollT = null;
+
+async function rpc(fn, args, cacheKey) {
+  try {
+    const { data, error } = await sb.rpc(fn, args);
+    if (error) throw error;
+    if (cacheKey) cacheSet(cacheKey, data);
+    return { data, off: false };
+  } catch (e) {
+    const c = cacheKey ? cacheGet(cacheKey) : null;
+    if (c && (!navigator.onLine || /fetch|network/i.test(String(e.message)))) return { data: c, off: true };
+    throw e;
+  }
+}
+
+function route() {
+  clearInterval(pollT);
+  const h = new URLSearchParams(location.hash.slice(1)), e = new URLSearchParams(location.search).get("e");
+  if (h.get("p")) return viewPedido(h.get("p"));
+  if (h.get("q")) return viewEntrada(h.get("q"));
+  if (e) return viewComprar(e);
+  viewLista();
+}
+addEventListener("hashchange", route);
+
+/* ─── Agenda ─── */
+async function viewLista() {
+  app.innerHTML = `<div class="spin"></div>`;
+  let evs = [], mios = [], off = false;
+  try { const r = await rpc("eventos_publicos", {}, "eventos"); evs = r.data || []; off = r.off; } catch (_) {}
+  const peds = new Map();
+  if (club) { try { const r = await rpc("mis_entradas", { p_token_club: club }, "mis"); (r.data || []).forEach(p => peds.set(p.token, p)); off = off || r.off; } catch (_) {} }
+  for (const t of getPeds()) { if (peds.has(t)) continue; try { const r = await rpc("mi_pedido", { p_token: t }, "p_" + t); if (r.data) peds.set(t, r.data); off = off || r.off; } catch (_) {} }
+  mios = [...peds.values()].filter(p => p.estado !== "anulado" && new Date(p.evento.fecha) > Date.now() - 432e5);
+  app.innerHTML = `
+  <div class="topbar"><a href="index.html">← Beer Garden</a><span>Agenda</span></div>
+  ${offBar(off)}
+  <section class="pad stack" style="gap:8px;padding-bottom:8px">
+    <span class="kick">Agenda</span>
+    <h1 style="font-size:clamp(40px,12vw,56px);line-height:.9">Lo que viene</h1>
+  </section>
+  ${mios.length ? `<section class="pad stack" style="gap:12px;padding-top:10px">
+    <span class="kick">Mis entradas</span>
+    ${mios.map(p => `<a class="box ev fx-lift" href="#p=${esc(p.token)}" style="text-decoration:none">
+      <div class="row"><span class="grow" style="font-family:'Space Mono';font-weight:700;font-size:18px;line-height:1.1">${esc(p.evento.nombre)}</span>${tagEstado(p.estado)}</div>
+      <span class="small muted">${fFecha(p.evento.fecha)} · ${fHora(p.evento.fecha)} · ${p.entradas.length} ${p.entradas.length === 1 ? "entrada" : "entradas"}</span>
+    </a>`).join("")}
+  </section>` : ""}
+  <section class="pad stack" style="gap:14px;padding-top:${mios.length ? 6 : 10}px">
+    ${mios.length ? `<span class="kick">Eventos</span>` : ""}
+    ${evs.map(ev => { const desde = Math.min(...ev.tipos.map(t => +t.precio)); const agot = ev.tipos.every(t => t.disponibles === 0);
+      return `<div class="box ev">
+        <span class="date">${fFecha(ev.fecha)} · ${fHora(ev.fecha)}</span>
+        <h3>${esc(ev.nombre)}</h3>
+        ${ev.descripcion ? `<p class="small muted">${esc(ev.descripcion)}</p>` : ""}
+        <div class="row" style="margin-top:2px"><span class="grow small">${ev.tipos.length > 1 ? "Desde " : ""}<strong style="font-family:'Space Mono';font-size:18px">${money(desde)}</strong></span>
+        ${agot ? `<span class="tag no">Agotado</span>` : `<a class="btn btn-wood btn-sm" href="?e=${esc(ev.slug)}">Comprar entradas</a>`}</div>
+      </div>`; }).join("") || `<p class="muted">${off ? "Conéctate a internet para ver los eventos." : "Pronto anunciamos el próximo evento."}</p>`}
+  </section>`;
+}
+const tagEstado = e => ({ pendiente: `<span class="tag wait">Pendiente de pago</span>`, pagado: `<span class="tag ok">Pagado</span>`, anulado: `<span class="tag no">Anulado</span>` })[e] || "";
+
+/* ─── Comprar ─── */
+async function viewComprar(slug) {
+  app.innerHTML = `<div class="spin"></div>`;
+  let evs = [];
+  try { evs = (await rpc("eventos_publicos", {}, "eventos")).data || []; } catch (e) { app.innerHTML = `<div class="pad"><div class="err">${esc(errMsg(e))}</div></div>`; return; }
+  const ev = evs.find(x => x.slug === slug);
+  if (!ev) { app.innerHTML = `<div class="topbar"><a href="agenda.html">← Agenda</a><span>Agenda</span></div><div class="pad stack"><h2 style="font-size:28px">Evento no disponible</h2><p class="muted">Ya pasó o se cerró la venta.</p><a class="btn btn-paper" href="agenda.html">Ver agenda</a></div>`; return; }
+  let socio = null;
+  if (club) { try { const { data } = await sb.rpc("mi_tarjeta", { p_token: club }); socio = data; } catch (_) {} }
+  const cant = {}; ev.tipos.forEach(t => cant[t.id] = 0);
+  app.innerHTML = `
+  <div class="topbar"><a href="agenda.html">← Agenda</a><span>Entradas</span></div>
+  <section class="pad stack" style="gap:10px">
+    <span class="date">${fFecha(ev.fecha)} · ${fHora(ev.fecha)}</span>
+    <h1 style="font-size:clamp(34px,10vw,46px);line-height:.95">${esc(ev.nombre)}</h1>
+    ${ev.descripcion ? `<p class="muted">${esc(ev.descripcion)}</p>` : ""}
+  </section>
+  <form class="pad stack" id="f" style="padding-top:4px">
+    <span class="kick">1 · Elige tus entradas</span>
+    <div class="box list" style="padding:4px 16px">
+      ${ev.tipos.map(t => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block;font-size:17px">${esc(t.nombre)}</strong><span class="small muted">${money(t.precio)}${t.disponibles === null ? "" : t.disponibles === 0 ? " · agotado" : t.disponibles <= 20 ? " · quedan " + t.disponibles : ""}</span></div>
+        <div class="stepper"><button type="button" data-m="${t.id}" aria-label="Quitar">−</button><b id="c${t.id}">0</b><button type="button" data-p="${t.id}" aria-label="Agregar" ${t.disponibles === 0 ? "disabled" : ""}>+</button></div></div>`).join("")}
+    </div>
+    <span class="small muted" style="margin-top:-4px">Hasta 10 por pedido. Cada entrada tiene su propio QR.</span>
+    <span class="kick" style="margin-top:8px">2 · Tus datos</span>
+    ${socio ? `<div class="box row" style="padding:12px 16px"><span class="grow">Comprando como <strong>${esc(socio.nombre)}</strong><span class="small muted" style="display:block">Socio Beer Club · sumas 10 pts por cada $1</span></span></div>` : `
+    <label class="field">Nombre<input class="input" name="nombre" required minlength="2" autocomplete="name" placeholder="Ana Pérez"></label>
+    <label class="field">Celular (WhatsApp)<div class="tel"><span>+593</span><input class="input" name="tel" required inputmode="tel" autocomplete="tel-national" placeholder="099 123 4567"></div></label>
+    <span class="small muted" style="margin-top:-6px">Si eres del Beer Club usa el mismo celular y sumas puntos.</span>`}
+    <div class="box row" style="padding:14px 16px;margin-top:6px"><span class="grow small" style="letter-spacing:.14em;text-transform:uppercase">Total</span><strong id="tot" style="font-family:'Space Mono';font-size:28px">$0</strong></div>
+    <div id="e"></div>
+    <button class="btn btn-wood" id="ok" disabled>Reservar entradas</button>
+    <p class="small muted">Al reservar te mostramos los datos para transferir. Tus QR aparecen aquí cuando confirmemos el pago.</p>
+  </form>`;
+  const total = () => ev.tipos.reduce((s, t) => s + cant[t.id] * t.precio, 0), n = () => Object.values(cant).reduce((a, b) => a + b, 0);
+  const upd = () => {
+    ev.tipos.forEach(t => { document.getElementById("c" + t.id).textContent = cant[t.id];
+      app.querySelector(`[data-m="${t.id}"]`).disabled = !cant[t.id];
+      app.querySelector(`[data-p="${t.id}"]`).disabled = n() >= 10 || t.disponibles === 0 || (t.disponibles !== null && cant[t.id] >= t.disponibles); });
+    document.getElementById("tot").textContent = money(total());
+    const b = document.getElementById("ok"); b.disabled = !n(); b.textContent = n() ? `Reservar ${n()} ${n() === 1 ? "entrada" : "entradas"}` : "Reservar entradas";
+  };
+  app.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { cant[b.dataset.p]++; upd(); });
+  app.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { cant[b.dataset.m] = Math.max(0, cant[b.dataset.m] - 1); upd(); });
+  upd();
+  document.getElementById("f").onsubmit = async evt => {
+    evt.preventDefault();
+    const f = evt.target, b = document.getElementById("ok"), e = document.getElementById("e");
+    e.innerHTML = ""; b.disabled = true; b.textContent = "Un momento…";
+    const { data: tok, error } = await sb.rpc("comprar_entradas", {
+      p_evento: ev.id, p_nombre: socio ? null : f.nombre.value, p_telefono: socio ? null : normTel(f.tel.value),
+      p_items: Object.entries(cant).filter(([, q]) => q > 0).map(([tipo, cantidad]) => ({ tipo: +tipo, cantidad })),
+      p_token_club: socio ? club : null
+    });
+    if (error) { e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; upd(); return; }
+    addPed(tok);
+    history.replaceState(null, "", location.pathname + "#p=" + tok);
+    route();
+  };
+}
+
+/* ─── Mi pedido ─── */
+async function viewPedido(tok) {
+  addPed(tok);
+  app.innerHTML = `<div class="spin"></div>`;
+  let r;
+  try { r = await rpc("mi_pedido", { p_token: tok }, "p_" + tok); } catch (e) { app.innerHTML = `<div class="pad"><div class="err">${esc(errMsg(e))}</div></div>`; return; }
+  if (!r.data) { app.innerHTML = `<div class="topbar"><a href="agenda.html">← Agenda</a><span>Entradas</span></div><div class="pad stack"><h2 style="font-size:28px">Pedido no encontrado</h2><a class="btn btn-paper" href="agenda.html">Ver agenda</a></div>`; return; }
+  paintPedido(r.data, r.off, tok);
+  if (r.data.estado === "pendiente") pollT = setInterval(async () => {
+    if (document.visibilityState !== "visible") return;
+    try { const x = await rpc("mi_pedido", { p_token: tok }, "p_" + tok); if (x.data && x.data.estado !== "pendiente") { clearInterval(pollT); paintPedido(x.data, false, tok); if (navigator.vibrate) navigator.vibrate([60, 40, 60]); } } catch (_) {}
+  }, 6000);
+}
+
+function paintPedido(p, off, tok) {
+  const ev = p.evento, n = p.entradas.length;
+  const head = `<div class="topbar"><a href="agenda.html">← Agenda</a><span>Ref ${esc(p.ref)}</span></div>${offBar(off)}
+  <section class="pad stack" style="gap:8px;padding-bottom:10px">
+    <span class="date">${fFecha(ev.fecha)} · ${fHora(ev.fecha)}</span>
+    <h1 style="font-size:clamp(32px,9.5vw,44px);line-height:.95">${esc(ev.nombre)}</h1>
+    <div class="row"><span class="grow small muted">${esc(p.nombre)} · ${n} ${n === 1 ? "entrada" : "entradas"} · ${money(p.total)}</span>${tagEstado(p.estado)}</div>
+  </section>`;
+  if (p.estado === "pendiente") {
+    const msg = `Hola Beer Garden 🍺 Envío el comprobante de mis entradas.\nEvento: ${ev.nombre}\nReferencia: ${p.ref}\nTotal: ${money(p.total)}\nNombre: ${p.nombre}`;
+    app.innerHTML = head + `
+    <section class="pad stack" style="padding-top:8px">
+      <span class="kick">1 · Transfiere ${money(p.total)}</span>
+      <div class="box pago">${esc(ev.datos_pago)}</div>
+      <div class="box row" style="padding:12px 16px"><span class="grow small">Pon esta referencia en el concepto</span><strong style="font-family:'Space Mono';font-size:24px;letter-spacing:.12em">${esc(p.ref)}</strong></div>
+      <span class="kick" style="margin-top:8px">2 · Envíanos el comprobante</span>
+      <a class="btn btn-grass" href="${wa(TEL_LOCAL, msg)}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
+      <p class="small muted">Cuando confirmemos la transferencia tus entradas aparecen aquí con su QR. Esta página se actualiza sola.</p>
+    </section>`;
+    return;
+  }
+  if (p.estado === "anulado") {
+    app.innerHTML = head + `<section class="pad stack"><p>Este pedido fue anulado. Si crees que es un error, escríbenos.</p><a class="btn btn-grass" href="${wa(TEL_LOCAL, "Hola Beer Garden, mi pedido " + p.ref + " aparece anulado.")}" target="_blank" rel="noopener">Escribir por WhatsApp</a></section>`;
+    return;
+  }
+  app.innerHTML = head + `
+  <section class="stack" style="gap:26px;padding:8px 0 10px">
+    ${p.entradas.map(x => ticket(x, n, ev)).join("")}
+  </section>
+  <section class="pad stack" style="gap:8px">
+    <p class="small muted">Cada QR sirve una sola vez. Puedes mandarle a cada amigo su entrada con "Enviar a un amigo".</p>
+    <p class="small muted">Abre esta página una vez antes del evento y tus entradas se verán aunque no tengas internet en la puerta.</p>
+  </section>`;
+}
+
+function ticket(x, de, ev) {
+  const usada = x.estado === "usada";
+  const share = `Tu entrada para ${ev.nombre} (${fFecha(ev.fecha)}) 🍺 Muestra el QR en la puerta: ${base}#q=${x.codigo}`;
+  return `<div class="box qr fx-ticket ent ${usada ? "usada" : ""}">
+    <div class="row" style="width:100%"><strong class="grow" style="font-family:'Space Mono';font-size:18px">${esc(x.tipo)}</strong><span class="small muted" style="white-space:nowrap;flex:none">${x.n} de ${de}</span></div>
+    ${x.codigo ? qrSvg(x.codigo) : ""}
+    ${usada ? `<span class="sello">Usada ${x.usado_en ? fHora(x.usado_en) : ""}</span>` : ""}
+    ${usada ? "" : `<a class="btn btn-paper btn-sm" style="width:100%" href="${wa("", share)}" target="_blank" rel="noopener">Enviar a un amigo</a>`}
+  </div>`;
+}
+
+/* ─── Una entrada (reenviada) ─── */
+async function viewEntrada(cod) {
+  app.innerHTML = `<div class="spin"></div>`;
+  let r;
+  try { r = await rpc("ver_entrada", { p_codigo: cod }, "q_" + cod); } catch (e) { app.innerHTML = `<div class="pad"><div class="err">${esc(errMsg(e))}</div></div>`; return; }
+  const x = r.data;
+  if (!x) { app.innerHTML = `<div class="topbar"><a href="agenda.html">← Agenda</a><span>Entrada</span></div><div class="pad stack"><h2 style="font-size:28px">Entrada no válida</h2><p class="muted">Puede que la hayan reemitido. Pide el enlace nuevo a quien te la envió.</p></div>`; return; }
+  app.innerHTML = `<div class="topbar"><a href="agenda.html">← Agenda</a><span>Entrada</span></div>${offBar(r.off)}
+  <section class="pad stack" style="gap:8px;padding-bottom:12px">
+    <span class="date">${fFecha(x.evento.fecha)} · ${fHora(x.evento.fecha)}</span>
+    <h1 style="font-size:clamp(32px,9.5vw,44px);line-height:.95">${esc(x.evento.nombre)}</h1>
+    <span class="small muted">Compra de ${esc(x.nombre)}</span>
+  </section>
+  ${ticket(x, x.de, x.evento)}
+  <section class="pad"><p class="small muted">Este QR sirve una sola vez. Abre esta página antes del evento para tenerla sin internet.</p></section>`;
+}
+
+route();
+</script>
+</body>
+</html>

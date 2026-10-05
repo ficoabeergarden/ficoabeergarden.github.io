@@ -30,3 +30,12 @@ Menú de domicilio incluido (precios de la carta): alitas y costillitas, hamburg
 - **Costo de envío y zonas de cobertura**: hoy la página dice que se confirma por WhatsApp.
 - **Agenda**: los flyers son los actuales; hay que cambiarlos cada semana.
 - **Juega y gana**: "Atrapa la espuma", 30 segundos. Mueve el jarro para atrapar gotas de cerveza y esquivar las patrullas. Meta: 50 de 56 gotas sin chocar 3 patrullas. Definir qué premio se canjea en caja.
+
+
+## Eventos y entradas
+
+1. En Supabase → SQL Editor ejecuta `supabase/eventos.sql` (después de beerclub.sql).
+2. `agenda.html`: el cliente elige entradas, ve los datos para transferir y recibe sus QR cuando el staff confirma.
+3. `staff.html` → pestaña **Eventos**: crear evento (admin), confirmar pagos, reemitir QR, y **Puerta** para escanear.
+4. Antes de abrir puertas toca **Descargar lista del evento** con wifi: así la puerta valida sin internet y sincroniza al volver la señal.
+5. `sw.js` guarda las páginas en el teléfono para que abran sin conexión.

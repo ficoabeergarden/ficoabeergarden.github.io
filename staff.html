@@ -65,6 +65,27 @@ p{margin:0;line-height:1.5}
 .stat{padding:14px 16px;display:grid;gap:4px}
 .stat b{font-family:"Space Mono";font-size:32px;line-height:1}
 .stat span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--ink);border-radius:12px;overflow:hidden}
+.seg button{min-height:48px;border:0;background:var(--paper);font:700 14px "Space Mono",monospace;text-transform:uppercase;cursor:pointer;color:var(--ink)}
+.seg button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.evrow{width:100%;text-align:left;padding:14px 16px;display:grid;gap:8px;cursor:pointer;font:inherit;color:inherit}
+.evrow strong{font-family:"Space Mono";font-size:18px;display:block}
+.pill{display:inline-flex;padding:4px 9px;background:var(--amber);border:1px solid var(--ink);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.ped{padding:14px 16px;display:grid;gap:10px}
+.ped summary{list-style:none;cursor:pointer}
+.ped summary::-webkit-details-marker{display:none}
+.ref{font-family:"Space Mono";font-size:20px;letter-spacing:.1em}
+.res{padding:22px 18px;display:grid;gap:6px;border:2px solid var(--ink);text-align:center}
+.res-t{font-family:"Space Mono";font-weight:700;font-size:40px;line-height:1;text-transform:uppercase}
+.res strong{font-family:"Space Mono";font-size:22px}
+.res.good{background:#2f5d34;color:#f4f7e8}
+.res.bad{background:#8a2b12;color:#fbe9e2}
+.dotc{width:10px;height:10px;border-radius:50%;background:#8a2b12;flex:none}
+.dotc.on{background:#2f5d34}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) 76px 76px 32px;gap:6px;align-items:center}
+.trow .input{min-height:48px;font-size:15px;padding:0 10px}
+.warn{background:#fbefcf;border:1px solid #8a5a00;padding:10px 12px;font-size:13px;line-height:1.4}
+textarea.input{padding:12px 14px;min-height:96px;resize:vertical;font-size:15px}
 .spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:sp .8s linear infinite;margin:60px auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style>
@@ -78,6 +99,7 @@ p{margin:0;line-height:1.5}
 const SB_URL = "https://jukpaqtriemqvxormrgb.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1a3BhcXRyaWVtcXZ4b3JtcmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzODY1ODQsImV4cCI6MjEwNTk2MjU4NH0.4PPIVK2HvvgwrGEtNVn7CozqDCldvlFWnK2rpgrOmHE";
 const sb = supabase.createClient(SB_URL, SB_KEY, { db: { schema: "beerclub" }, auth: { persistSession: true, storageKey: "bc_staff" } });
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
 const app = document.getElementById("app");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -113,7 +135,13 @@ async function boot() {
   app.innerHTML = `<div class="spin"></div>`;
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return viewLogin();
-  const { data: s } = await sb.from("staff").select("nombre,rol,activo").eq("auth_id", session.user.id).maybeSingle();
+  const { data: s, error: se } = await sb.from("staff").select("nombre,rol,activo").eq("auth_id", session.user.id).maybeSingle();
+  if (se) {
+    const c = JSON.parse(localStorage.getItem("bc_yo") || "null");
+    if (c) { yo = c; tab = "eventos"; return shell(); }
+    return viewLogin("Sin conexión. Conéctate una vez para entrar.");
+  }
+  if (s && s.activo) localStorage.setItem("bc_yo", JSON.stringify(s));
   if (!s || !s.activo) { await sb.auth.signOut(); return viewLogin("Esta cuenta no tiene acceso al Beer Club."); }
   yo = s;
   tab = sessionStorage.getItem("bc_tab") || (yo.rol === "admin" ? "panel" : "sumar");
@@ -125,16 +153,17 @@ function shell() {
   const ic = {
     sumar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17.5h7M17.5 14v7"/></svg>',
     canjear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4"/><path d="M5 12v9h14v-9M12 8v13M12 8S10.5 3 8 4s0 4 4 4c4 0 6.5-3 4-4s-4 4-4 4"/></svg>',
+    eventos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2"/></svg>',
     panel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
   };
-  const tabs = [["sumar", "Sumar puntos", "Escanear QR"], ["canjear", "Canjear", "Entregar premio"]].concat(yo.rol === "admin" ? [["panel", "Panel", "Ver resumen"]] : []);
+  const tabs = [["sumar", "Sumar puntos", "Escanear QR"], ["canjear", "Canjear", "Entregar premio"], ["eventos", "Eventos", "Pagos y puerta"]].concat(yo.rol === "admin" ? [["panel", "Panel", "Ver resumen"]] : []);
   app.innerHTML = `
   <div class="topbar"><span class="grow">Hola, ${esc(yo.nombre)}</span><button id="out">Salir</button></div>
   <nav class="tabs" role="tablist">${tabs.map(([k, l, s]) => `<button role="tab" aria-selected="${tab === k}" data-t="${k}">${ic[k]}<strong>${l}</strong><span>${s}</span></button>`).join("")}</nav>
   <main id="view"></main>`;
-  document.getElementById("out").onclick = async () => { await stopScan(); await sb.auth.signOut(); sessionStorage.removeItem("bc_tab"); viewLogin(); };
+  document.getElementById("out").onclick = async () => { await stopScan(); await sb.auth.signOut(); sessionStorage.removeItem("bc_tab"); sessionStorage.removeItem("bc_ev"); localStorage.removeItem("bc_yo"); evSel = null; viewLogin(); };
   app.querySelectorAll("[data-t]").forEach(b => b.onclick = async () => { await stopScan(); tab = b.dataset.t; sessionStorage.setItem("bc_tab", tab); shell(); });
-  ({ sumar: viewScan, canjear: viewCanjear, panel: viewPanel })[tab]();
+  ({ sumar: viewScan, canjear: viewCanjear, eventos: viewEventos, panel: viewPanel })[tab]();
 }
 const V = () => document.getElementById("view");
 
@@ -153,12 +182,17 @@ function viewScan() {
     </details>
   </section>`;
   document.getElementById("man").onsubmit = ev => { ev.preventDefault(); const v = ev.target.c.value.trim(); if (v) buscar(v); };
+  startScanner(async txt => { await stopScan(); buscar(txt); });
+}
+
+function startScanner(onText) {
   scanner = new Html5Qrcode("reader", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
-  scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.8); return { width: s, height: s }; } }, async txt => { await stopScan(); buscar(txt.trim()); }, () => {})
-    .catch(() => { document.getElementById("e").innerHTML = `<div class="err">No se pudo abrir la cámara. Da permiso en el navegador o escribe el código abajo.</div>`; });
+  scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.8); return { width: s, height: s }; } }, txt => onText(txt.trim()), () => {})
+    .catch(() => { const e = document.getElementById("e"); if (e) e.innerHTML = `<div class="err">No se pudo abrir la cámara. Da permiso en el navegador.</div>`; });
 }
 
 async function buscar(qr) {
+  if (/^BGE:/i.test(qr) || qr.includes("#q=")) { viewScan(); document.getElementById("e").innerHTML = `<div class="err">Esto es una entrada de evento. Escanéala en Eventos → Puerta.</div>`; return; }
   const token = (qr.includes("#t=") ? qr.split("#t=")[1] : qr).split(/[?&\s]/)[0].trim().toLowerCase();
   V().innerHTML = `<div class="spin"></div>`;
   const { data: c, error: qe } = await sb.from("clientes").select("id,nombre,qr_token").eq("qr_token", token).maybeSingle();
@@ -266,6 +300,291 @@ async function viewPanel() {
     <button class="btn btn-paper" id="rf">Actualizar</button>
   </section>`;
   document.getElementById("rf").onclick = viewPanel;
+}
+
+/* ─── Eventos ─── */
+const AGENDA = location.href.replace(/staff\.html.*$/, "agenda.html").replace(/#.*$/, "");
+const money = n => "$" + Number(n).toFixed(2).replace(/\.00$/, "");
+const fF = s => new Date(s).toLocaleString("es-EC", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const fH = s => s ? new Date(s).toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit" }) : "";
+const lsGet = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } };
+const lsSet = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const esRed = e => /fetch|network|failed|load/i.test(String(e && e.message));
+const resumen = es => Object.entries((es || []).filter(x => x.estado !== "anulada").reduce((m, x) => (m[x.tipo] = (m[x.tipo] || 0) + 1, m), {})).map(([t, n]) => n + " " + t).join(" · ");
+const waEntradas = (p, n) => "https://wa.me/" + p.telefono + "?text=" + encodeURIComponent(`Hola ${p.nombre}, confirmamos tu pago 🍺\nTus ${n} ${n === 1 ? "entrada" : "entradas"} para ${evSel.nombre} están aquí: ${AGENDA}#p=${p.token}\nCada entrada tiene su propio QR y sirve una sola vez. Desde esa página puedes enviarle a cada amigo la suya.`);
+let evSel = JSON.parse(sessionStorage.getItem("bc_ev") || "null"), evSub = sessionStorage.getItem("bc_evsub") || "pagos", aviso = "", lock = false, syncing = false;
+const S = () => document.getElementById("sub");
+const KP = () => "bc_puerta_" + evSel.id;
+
+async function viewEventos() {
+  if (evSel) return viewEvento();
+  V().innerHTML = `<div class="spin"></div>`;
+  const { data, error } = await sb.rpc("eventos_staff");
+  if (error) {
+    const listas = Object.keys(localStorage).filter(k => k.startsWith("bc_puerta_")).map(k => lsGet(k, null)).filter(Boolean);
+    V().innerHTML = `<section class="pad stack">
+      <div class="err">${esRed(error) ? "Sin conexión. Puedes abrir la puerta de un evento con lista guardada." : esc(errMsg(error))}</div>
+      ${listas.map(l => `<button class="box evrow" data-l="${l.ev.id}"><strong>${esc(l.ev.nombre)}</strong><span class="small muted">Lista guardada ${fH(l.at)} · ${l.lista.length} entradas</span></button>`).join("")}
+      <button class="btn btn-paper" id="rf">Reintentar</button></section>`;
+    V().querySelectorAll("[data-l]").forEach(b => b.onclick = () => { const l = listas.find(x => x.ev.id == b.dataset.l); abrirEvento(l.ev, "puerta"); });
+    document.getElementById("rf").onclick = viewEventos;
+    return;
+  }
+  V().innerHTML = `<section class="pad stack">
+    <span class="kick">Eventos</span>
+    ${(data || []).map(e => `<button class="box evrow" data-e="${e.id}">
+      <div><strong>${esc(e.nombre)}</strong><span class="small muted">${fF(e.fecha)}${e.activo ? "" : " · venta cerrada"}</span></div>
+      <div class="row" style="flex-wrap:wrap;gap:8px">${e.pendientes ? `<span class="pill">${e.pendientes} por confirmar</span>` : ""}<span class="small muted">${e.vendidas} vendidas · ${e.adentro} adentro</span></div>
+    </button>`).join("") || `<p class="small muted">No hay eventos activos.</p>`}
+    ${yo.rol === "admin" ? `<button class="btn btn-paper" id="nuevo">+ Nuevo evento</button>` : ""}
+  </section>`;
+  V().querySelectorAll("[data-e]").forEach(b => b.onclick = () => abrirEvento(data.find(x => x.id == b.dataset.e), "pagos"));
+  const n = document.getElementById("nuevo"); if (n) n.onclick = viewNuevoEvento;
+}
+
+function abrirEvento(e, sub) {
+  evSel = { id: e.id, nombre: e.nombre, fecha: e.fecha, slug: e.slug, activo: e.activo };
+  evSub = sub; sessionStorage.setItem("bc_ev", JSON.stringify(evSel)); sessionStorage.setItem("bc_evsub", sub);
+  viewEvento();
+}
+
+function viewEvento() {
+  V().innerHTML = `
+  <section class="pad stack" style="gap:10px;padding-bottom:8px">
+    <button class="link" id="atras" style="justify-self:start">← Eventos</button>
+    <h2 style="font-size:26px;line-height:1">${esc(evSel.nombre)}</h2>
+    <span class="small muted">${fF(evSel.fecha)}</span>
+    <div class="seg" role="tablist"><button role="tab" data-s="pagos" aria-selected="${evSub === "pagos"}">Pagos</button><button role="tab" data-s="puerta" aria-selected="${evSub === "puerta"}">Puerta</button></div>
+  </section>
+  <div id="sub"></div>`;
+  document.getElementById("atras").onclick = async () => { await stopScan(); evSel = null; sessionStorage.removeItem("bc_ev"); viewEventos(); };
+  V().querySelectorAll("[data-s]").forEach(b => b.onclick = async () => { await stopScan(); evSub = b.dataset.s; sessionStorage.setItem("bc_evsub", evSub); viewEvento(); });
+  (evSub === "pagos" ? viewPagos : viewPuerta)();
+}
+
+/* Pagos */
+async function viewPagos() {
+  S().innerHTML = `<div class="spin"></div>`;
+  const { data: peds, error } = await sb.rpc("pedidos_evento", { p_evento: evSel.id });
+  if (error) { S().innerHTML = `<div class="pad"><div class="err">${esRed(error) ? "Sin conexión. Los pagos se confirman con internet; la puerta funciona sin él." : esc(errMsg(error))}</div></div>`; return; }
+  const pend = peds.filter(p => p.estado === "pendiente"), pag = peds.filter(p => p.estado === "pagado");
+  const key = p => esc((p.nombre + " " + p.ref + " " + p.telefono).toLowerCase());
+  const link = `${AGENDA}?e=${evSel.slug}`;
+  S().innerHTML = `<section class="pad stack" style="padding-top:6px">
+    ${aviso}
+    <div class="box row" style="padding:10px 14px"><span class="grow small" style="word-break:break-all">${esc(link)}</span><a class="btn btn-grass btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Entradas para " + evSel.nombre + " 🍺 " + link)}">Compartir</a></div>
+    <input class="input" id="q" placeholder="Buscar nombre, referencia o celular" autocomplete="off">
+    <span class="kick">Por confirmar · ${pend.length}</span>
+    ${pend.map(p => `<div class="box ped" data-k="${key(p)}">
+      <div class="row"><div class="grow"><strong style="font-family:'Space Mono';font-size:17px;display:block">${esc(p.nombre)}</strong><span class="small muted">+${esc(p.telefono)}${p.socio ? " · socio" : ""} · ${fH(p.creado_en)}</span></div><span class="ref">${esc(p.ref)}</span></div>
+      <div class="row"><span class="grow small">${esc(resumen(p.entradas))}</span><strong style="font-family:'Space Mono';font-size:22px">${money(p.total)}</strong></div>
+      <div class="row"><button class="btn btn-wood btn-sm grow" data-ok="${p.id}">Confirmar pago</button><button class="link" data-x="${p.id}">Anular</button></div>
+    </div>`).join("") || `<p class="small muted">Nada pendiente.</p>`}
+    <span class="kick" style="margin-top:10px">Confirmados · ${pag.length}</span>
+    ${pag.map(p => { const vivas = p.entradas.filter(x => x.estado !== "anulada"); return `<details class="box ped" data-k="${key(p)}">
+      <summary class="row"><div class="grow"><strong style="font-family:'Space Mono';font-size:16px;display:block">${esc(p.nombre)}</strong><span class="small muted">${esc(p.ref)} · ${esc(resumen(p.entradas))}</span></div><span class="small">${vivas.filter(x => x.estado === "usada").length}/${vivas.length} adentro</span></summary>
+      <div class="list">${vivas.map(x => `<div><span class="grow small">${x.n}. ${esc(x.tipo)}</span>${x.estado === "usada" ? `<span class="small muted">Entró ${fH(x.usado_en)}</span>` : `<button class="link" data-re="${x.id}">Reemitir QR</button>`}</div>`).join("")}</div>
+      <a class="btn btn-grass btn-sm" style="width:100%" target="_blank" rel="noopener" href="${waEntradas(p, vivas.length)}">Reenviar por WhatsApp</a>
+      ${yo.rol === "admin" ? `<button class="link" data-x="${p.id}" style="justify-self:start">Anular pedido</button>` : ""}
+    </details>`; }).join("") || `<p class="small muted">Aún no hay pagos confirmados.</p>`}
+    ${yo.rol === "admin" ? `<button class="link" id="act" style="justify-self:start">${evSel.activo === false ? "Abrir la venta otra vez" : "Cerrar la venta de entradas"}</button>` : ""}
+    <button class="btn btn-paper" id="rf">Actualizar</button>
+  </section>`;
+  aviso = "";
+  document.getElementById("q").oninput = ev => { const q = ev.target.value.trim().toLowerCase(); S().querySelectorAll("[data-k]").forEach(c => c.style.display = !q || c.dataset.k.includes(q) ? "" : "none"); };
+  document.getElementById("rf").onclick = viewPagos;
+  S().querySelectorAll("[data-ok]").forEach(b => b.onclick = async () => {
+    const p = pend.find(x => x.id == b.dataset.ok);
+    if (!confirm(`¿Ya viste ${money(p.total)} en la cuenta con la referencia ${p.ref}?`)) return;
+    b.disabled = true;
+    const { data: r, error } = await sb.rpc("confirmar_pago", { p_pedido: p.id });
+    if (error) { b.disabled = false; alert(errMsg(error)); return; }
+    S().innerHTML = `<section class="pad stack" style="padding-top:6px">
+      <div class="ok"><span class="kick">Pago confirmado</span><span class="big" style="font-size:44px">${r.cantidad} QR</span><span>${esc(r.nombre)}${r.puntos ? ` · +${r.puntos} pts Beer Club` : ""}</span></div>
+      <a class="btn btn-grass" target="_blank" rel="noopener" href="${waEntradas(r, r.cantidad)}">Enviar entradas por WhatsApp</a>
+      <button class="btn btn-paper" id="vol">Volver a pagos</button></section>`;
+    document.getElementById("vol").onclick = viewPagos;
+  });
+  S().querySelectorAll("[data-x]").forEach(b => b.onclick = async () => {
+    if (!confirm("¿Anular este pedido? Sus entradas dejan de servir.")) return;
+    const { error } = await sb.rpc("anular_pedido", { p_pedido: +b.dataset.x });
+    if (error) { alert(errMsg(error)); return; }
+    viewPagos();
+  });
+  S().querySelectorAll("[data-re]").forEach(b => b.onclick = async () => {
+    if (!confirm("Se crea un QR nuevo y el anterior deja de servir al instante. ¿Seguir?")) return;
+    const { data: r, error } = await sb.rpc("reemitir_entrada", { p_entrada: +b.dataset.re });
+    if (error) { alert(errMsg(error)); return; }
+    aviso = `<div class="ok"><span class="kick">QR reemitido</span><span>El anterior ya no sirve. Envíale el nuevo a ${esc(r.nombre)}.</span><a class="btn btn-grass btn-sm" style="width:100%" target="_blank" rel="noopener" href="https://wa.me/${r.telefono}?text=${encodeURIComponent(`Hola ${r.nombre}, te reemitimos una entrada para ${evSel.nombre}. El QR anterior ya no sirve. Tus entradas: ${AGENDA}#p=${r.token}`)}">Enviar por WhatsApp</a></div>`;
+    viewPagos();
+  });
+  const act = document.getElementById("act");
+  if (act) act.onclick = async () => {
+    const on = evSel.activo === false;
+    if (!confirm(on ? "¿Abrir otra vez la venta?" : "¿Cerrar la venta? El evento deja de aparecer en la agenda.")) return;
+    const { error } = await sb.rpc("activar_evento", { p_evento: evSel.id, p_activo: on });
+    if (error) { alert(errMsg(error)); return; }
+    evSel.activo = on; sessionStorage.setItem("bc_ev", JSON.stringify(evSel)); viewPagos();
+  };
+}
+
+/* Puerta */
+function viewPuerta() {
+  lock = false;
+  S().innerHTML = `<section class="pad stack" style="padding-top:6px">
+    <div class="box" id="est" style="padding:12px 14px;display:grid;gap:8px"></div>
+    <div id="res"></div>
+    <div id="reader"></div>
+    <div id="e"></div>
+    <details><summary class="small" style="cursor:pointer">¿No lee el QR? Buscar por nombre</summary>
+      <div class="stack" style="margin-top:10px;gap:8px"><input class="input" id="bn" placeholder="Nombre del comprador" autocomplete="off"><div class="list" id="bl"></div></div>
+    </details>
+  </section>`;
+  paintEstado();
+  document.getElementById("bn").oninput = ev => {
+    const q = ev.target.value.trim().toLowerCase(), L = lsGet(KP(), null), bl = document.getElementById("bl");
+    if (!L) { bl.innerHTML = `<div class="small muted">Descarga la lista primero.</div>`; return; }
+    bl.innerHTML = q.length < 2 ? "" : L.lista.filter(x => x.nombre.toLowerCase().includes(q)).slice(0, 12).map(x => `<div><span class="grow small"><strong>${esc(x.nombre)}</strong> · ${esc(x.tipo)} ${x.n}/${x.de}</span>${x.estado === "usada" ? `<span class="small muted">Entró ${fH(x.usado_en)}</span>` : `<button class="btn btn-wood btn-sm" data-c="${x.c}">Dejar pasar</button>`}</div>`).join("") || `<div class="small muted">Sin resultados.</div>`;
+    bl.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { lock = true; try { scanner && scanner.pause(true); } catch (_) {} validar(b.dataset.c); });
+  };
+  startScanner(txt => { if (lock) return; lock = true; try { scanner.pause(true); } catch (_) {} leer(txt); });
+  syncCola();
+}
+
+function paintEstado() {
+  const el = document.getElementById("est"); if (!el || !evSel) return;
+  const L = lsGet(KP(), null), cola = lsGet("bc_cola", []).filter(c => c.ev === evSel.id), cf = lsGet("bc_conflictos", []).filter(c => c.ev === evSel.id), on = navigator.onLine;
+  el.innerHTML = `<div class="row"><span class="dotc ${on ? "on" : ""}"></span><strong class="grow">${on ? "Con conexión" : "Sin conexión"}</strong>${cola.length ? `<span class="pill">${cola.length} por sincronizar</span>` : ""}</div>
+    <span class="small muted">${L ? `Lista guardada a las ${fH(L.at)} · ${L.lista.length} entradas · ${L.lista.filter(x => x.estado === "usada").length} adentro` : "Este teléfono aún no tiene la lista. Descárgala antes de abrir puertas."}</span>
+    ${cf.length ? `<div class="warn">${cf.length} ${cf.length === 1 ? "entrada se usó" : "entradas se usaron"} dos veces mientras no había conexión: ${cf.map(c => esc(c.nombre || "?")).join(", ")}</div>` : ""}
+    <button class="btn btn-paper btn-sm" id="dl" style="width:100%" ${on ? "" : "disabled"}>${L ? "Actualizar lista" : "Descargar lista del evento"}</button>`;
+  document.getElementById("dl").onclick = descargarLista;
+}
+
+async function descargarLista() {
+  const b = document.getElementById("dl"); if (b) { b.disabled = true; b.textContent = "Descargando…"; }
+  await syncCola();
+  const { data, error } = await sb.rpc("lista_puerta", { p_evento: evSel.id });
+  if (error) { alert(errMsg(error)); paintEstado(); return; }
+  lsSet(KP(), { ev: evSel, at: new Date().toISOString(), lista: data });
+  paintEstado();
+}
+
+function leer(t) {
+  let cod = null;
+  if (/^BGE:/i.test(t)) cod = t.slice(4);
+  else if (t.includes("#q=")) cod = t.split("#q=")[1];
+  if (!cod) return resultado({ ok: false, motivo: t.includes("#t=") || /^[0-9a-f]{32}$/i.test(t) ? "club" : "no_existe" });
+  validar(cod.split(/[?&\s]/)[0].toLowerCase());
+}
+
+async function validar(cod) {
+  const L = lsGet(KP(), null);
+  let r = null;
+  if (navigator.onLine) {
+    const { data, error } = await sb.rpc("validar_entrada", { p_codigo: cod, p_evento: evSel.id });
+    if (!error) r = data; else if (!esRed(error)) r = { ok: false, motivo: "error", msg: errMsg(error) };
+  }
+  if (!r) r = validarLocal(cod, L);
+  else if (L) { const x = L.lista.find(y => y.c === cod); if (x && (r.ok || r.motivo === "usada")) { x.estado = "usada"; x.usado_en = x.usado_en || r.usado_en || new Date().toISOString(); lsSet(KP(), L); } }
+  resultado(r);
+}
+
+function validarLocal(cod, L) {
+  if (!L) return { ok: false, motivo: "sin_lista" };
+  const x = L.lista.find(y => y.c === cod);
+  if (!x) return { ok: false, motivo: "no_lista" };
+  if (x.estado === "usada") return { ok: false, motivo: "usada", ...x };
+  x.estado = "usada"; x.usado_en = new Date().toISOString(); lsSet(KP(), L);
+  const cola = lsGet("bc_cola", []); cola.push({ c: cod, ev: evSel.id, t: x.usado_en }); lsSet("bc_cola", cola);
+  return { ok: true, offline: true, ...x };
+}
+
+function resultado(r) {
+  const M = {
+    usada: ["Ya entró", `Esta entrada se usó a las ${fH(r.usado_en)}`],
+    no_existe: ["No válida", "Este QR no existe o fue reemitido"],
+    no_lista: ["No está en la lista", "Puede ser falsa, reemitida o comprada después de descargar la lista. Actualiza la lista cuando haya conexión."],
+    otro_evento: ["Otro evento", `Es una entrada de ${r.evento || "otro evento"}`],
+    pendiente: ["Sin pagar", "El pago de esta entrada no está confirmado"],
+    anulada: ["Anulada", "Esta entrada fue anulada"],
+    club: ["QR del Beer Club", "Es el QR de puntos. Pídele la entrada del evento."],
+    sin_lista: ["Sin lista", "No hay conexión y este teléfono no tiene la lista guardada"],
+    error: ["Error", r.msg || ""]
+  }[r.motivo] || ["No válida", ""];
+  if (navigator.vibrate) navigator.vibrate(r.ok ? 80 : [200, 80, 200]);
+  document.getElementById("res").innerHTML = (r.ok
+    ? `<div class="res good"><span class="res-t">Adelante</span><strong>${esc(r.nombre)}</strong><span>${esc(r.tipo)} · ${r.n} de ${r.de}${r.offline ? " · sin conexión" : ""}</span></div>`
+    : `<div class="res bad"><span class="res-t">${M[0]}</span>${r.nombre ? `<strong>${esc(r.nombre)}</strong>` : ""}<span>${esc(M[1])}</span></div>`)
+    + `<button class="btn btn-wood" id="sig" style="margin-top:12px">Escanear siguiente</button>`;
+  document.getElementById("sig").onclick = siguiente;
+  paintEstado();
+  if (r.ok) setTimeout(() => { if (document.getElementById("sig")) siguiente(); }, 2500);
+}
+
+function siguiente() {
+  const res = document.getElementById("res"); if (res) res.innerHTML = "";
+  lock = false; try { scanner && scanner.resume(); } catch (_) {}
+}
+
+async function syncCola() {
+  if (syncing || !navigator.onLine) return;
+  const cola = lsGet("bc_cola", []); if (!cola.length) return;
+  syncing = true; const rest = [];
+  for (const it of cola) {
+    const { data, error } = await sb.rpc("validar_entrada", { p_codigo: it.c, p_evento: it.ev, p_cuando: it.t });
+    if (error) { if (esRed(error)) rest.push(it); continue; }
+    if (data && !data.ok && data.motivo === "usada" && data.usado_en && Math.abs(new Date(data.usado_en) - new Date(it.t)) > 2000) {
+      const cf = lsGet("bc_conflictos", []); cf.push({ ...it, nombre: data.nombre, otra: data.usado_en }); lsSet("bc_conflictos", cf);
+    }
+  }
+  lsSet("bc_cola", rest.concat(lsGet("bc_cola", []).slice(cola.length)));
+  syncing = false; paintEstado();
+}
+setInterval(syncCola, 15000);
+addEventListener("online", () => { paintEstado(); syncCola(); });
+addEventListener("offline", paintEstado);
+
+/* Nuevo evento (admin) */
+function viewNuevoEvento() {
+  const fila = (n = "", ph = "General") => `<div class="trow"><input class="input" data-f="nombre" placeholder="${ph}" value="${n}"><input class="input" data-f="precio" inputmode="decimal" placeholder="$"><input class="input" data-f="cupo" inputmode="numeric" placeholder="Cupo"><button type="button" class="link" data-del aria-label="Quitar">✕</button></div>`;
+  V().innerHTML = `<form class="pad stack" id="f">
+    <button type="button" class="link" id="atras" style="justify-self:start">← Eventos</button>
+    <h2 style="font-size:28px">Nuevo evento</h2>
+    <label class="field">Nombre<input class="input" name="nombre" required minlength="3"></label>
+    <label class="field">Fecha y hora<input class="input" name="fecha" type="datetime-local" required></label>
+    <label class="field">Descripción (opcional)<textarea class="input" name="desc" rows="3"></textarea></label>
+    <label class="field">Datos para transferir<textarea class="input" name="pago" rows="5" required placeholder="Banco, tipo y n.º de cuenta, titular, cédula">${esc(localStorage.getItem("bc_pago") || "")}</textarea></label>
+    <span class="kick">Tipos de entrada</span>
+    <div class="trow small muted" style="margin-bottom:-8px"><span>Nombre</span><span>Precio</span><span>Cupo</span><span></span></div>
+    <div id="tipos" class="stack" style="gap:8px">${fila("", "General")}${fila("", "VIP")}</div>
+    <button type="button" class="btn btn-paper btn-sm" id="add">+ Agregar tipo</button>
+    <span class="small muted">Cupo vacío = sin límite.</span>
+    <div id="e"></div>
+    <button class="btn btn-wood" id="ok">Crear evento</button>
+  </form>`;
+  const T = document.getElementById("tipos");
+  const bindDel = () => T.querySelectorAll("[data-del]").forEach(b => b.onclick = () => b.parentElement.remove());
+  bindDel();
+  document.getElementById("add").onclick = () => { T.insertAdjacentHTML("beforeend", fila("", "Tipo")); bindDel(); };
+  document.getElementById("atras").onclick = viewEventos;
+  document.getElementById("f").onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, b = document.getElementById("ok"), e = document.getElementById("e");
+    const tipos = [...T.querySelectorAll(".trow")].map(r => ({ nombre: r.querySelector('[data-f="nombre"]').value.trim(), precio: parseFloat(r.querySelector('[data-f="precio"]').value.replace(",", ".")), cupo: r.querySelector('[data-f="cupo"]').value.trim() })).filter(t => t.nombre && !isNaN(t.precio));
+    if (!tipos.length) { e.innerHTML = `<div class="err">Agrega al menos un tipo con nombre y precio.</div>`; return; }
+    b.disabled = true; e.innerHTML = "";
+    const { data: slug, error } = await sb.rpc("crear_evento", { p_nombre: f.nombre.value, p_fecha: new Date(f.fecha.value).toISOString(), p_descripcion: f.desc.value, p_datos_pago: f.pago.value, p_tipos: tipos });
+    b.disabled = false;
+    if (error) { e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; return; }
+    localStorage.setItem("bc_pago", f.pago.value);
+    const link = `${AGENDA}?e=${slug}`;
+    V().innerHTML = `<section class="pad stack" style="padding-top:30px">
+      <div class="ok"><span class="kick">Evento creado</span><span style="font-family:'Space Mono';font-weight:700;font-size:24px">${esc(f.nombre.value)}</span><span class="small" style="word-break:break-all">${esc(link)}</span></div>
+      <a class="btn btn-grass" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Entradas para " + f.nombre.value + " 🍺 " + link)}">Compartir enlace de venta</a>
+      <button class="btn btn-paper" id="vol">Ver eventos</button></section>`;
+    document.getElementById("vol").onclick = viewEventos;
+  };
 }
 
 boot();

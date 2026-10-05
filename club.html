@@ -186,6 +186,27 @@ const SB_URL = "https://jukpaqtriemqvxormrgb.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1a3BhcXRyaWVtcXZ4b3JtcmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzODY1ODQsImV4cCI6MjEwNTk2MjU4NH0.4PPIVK2HvvgwrGEtNVn7CozqDCldvlFWnK2rpgrOmHE";
 const TEL_LOCAL = "593984551000";
 const sb = supabase.createClient(SB_URL, SB_KEY, { db: { schema: "beerclub" }, auth: { persistSession: false } });
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+let agenda = { mios: [], evs: [] };
+async function loadAgenda() {
+  try {
+    const [a, b] = await Promise.all([sb.rpc("mis_entradas", { p_token_club: token }), sb.rpc("eventos_publicos")]);
+    agenda = { mios: (a.data || []).filter(p => p.estado !== "anulado"), evs: b.data || [] };
+  } catch (_) {}
+}
+function agendaHtml() {
+  const { mios, evs } = agenda;
+  if (!mios.length && !evs.length) return "";
+  const f = s => new Date(s).toLocaleDateString("es-EC", { weekday: "short", day: "numeric", month: "short" });
+  const conEntradas = new Set(mios.map(p => p.evento.slug));
+  const otros = evs.filter(e => !conEntradas.has(e.slug)).slice(0, 3);
+  return `<section class="pad stack" style="gap:12px;padding-top:30px">
+    <span class="kick">Agenda</span>
+    ${mios.length ? `<div class="box list" style="padding:4px 16px">${mios.map(p => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block">${esc(p.evento.nombre)}</strong><span class="small muted">${f(p.evento.fecha)} · ${p.entradas.length} ${p.entradas.length === 1 ? "entrada" : "entradas"} · ${p.estado === "pagado" ? "lista" : "pendiente de pago"}</span></div><a class="btn btn-sm ${p.estado === "pagado" ? "btn-wood" : "btn-paper"}" href="agenda.html#p=${esc(p.token)}">${p.estado === "pagado" ? "Ver QR" : "Pagar"}</a></div>`).join("")}</div>` : ""}
+    ${otros.length ? `<div class="box list" style="padding:4px 16px">${otros.map(e => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block">${esc(e.nombre)}</strong><span class="small muted">${f(e.fecha)} · sumas 10 pts por cada $1</span></div><a class="btn btn-grass btn-sm" href="agenda.html?e=${esc(e.slug)}">Entradas</a></div>`).join("")}</div>` : ""}
+    <a class="link" href="agenda.html" style="justify-self:start">Ver toda la agenda</a>
+  </section>`;
+}
 
 const NIVELES = [
   { id: "espuma", nombre: "Espuma", desde: 0, mult: "×1" },
@@ -381,7 +402,7 @@ async function fetchTarjeta() {
 async function viewTarjeta() {
   app.innerHTML = `<div class="spin"></div>`;
   try {
-    [data] = await Promise.all([fetchTarjeta(), loadRecompensas()]);
+    [data] = await Promise.all([fetchTarjeta(), loadRecompensas(), loadAgenda()]);
   } catch (e) { app.innerHTML = `<div class="pad"><div class="err">${esc(errMsg(e))}</div></div>`; return; }
   if (!data) { localStorage.removeItem("bc_token"); token = null; viewIntro(); return; }
   paintTarjeta(); startPoll();
@@ -410,6 +431,7 @@ function paintTarjeta() {
     ${qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true })}
     <span class="small" style="letter-spacing:.14em;text-transform:uppercase;text-align:center">Muéstralo al pagar</span>
   </div>
+  ${agendaHtml()}
   <section class="pad stack" style="gap:12px;padding-top:30px">
     <span class="kick">Canjea tus puntos</span>
     <div class="box list fx-lift" style="padding:4px 16px">
