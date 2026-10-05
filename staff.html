@@ -116,24 +116,27 @@ const MULT = { espuma: 1, lupulo: 1.25, barril: 1.5 };
 let yo = null, tab = "sumar", scanner = null, sel = null, monto = "";
 
 /* ─── Login ─── */
+const DOM_STAFF = "@staff.ficoabeergarden.app";
+const usuarioAEmail = v => { v = v.trim().toLowerCase(); return v.includes("@") ? v : v + DOM_STAFF; };
 function viewLogin(msg) {
   app.innerHTML = `
   <div class="topbar"><span>Beer Club · Personal</span></div>
   <form class="pad stack" id="f" style="padding-top:36px">
     <span class="kick">Solo personal</span>
     <h1 style="font-size:36px;line-height:.95">Entrar</h1>
-    <label class="field">Email<input class="input" name="email" type="email" required autocomplete="username"></label>
+    <label class="field">Usuario<input class="input" name="email" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="carlos"></label>
     <label class="field">Clave<input class="input" name="pass" type="password" required autocomplete="current-password"></label>
     <div id="e">${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>
     <button class="btn btn-wood" id="ok">Entrar</button>
+    <p class="small muted" style="text-align:center">¿No tienes usuario? Pídeselo a la dueña.</p>
   </form>`;
   document.getElementById("f").onsubmit = async ev => {
     ev.preventDefault();
     const f = ev.target, b = document.getElementById("ok");
     b.disabled = true;
-    const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.pass.value });
+    const { error } = await sb.auth.signInWithPassword({ email: usuarioAEmail(f.email.value), password: f.pass.value });
     b.disabled = false;
-    if (error) { document.getElementById("e").innerHTML = `<div class="err">Email o clave incorrectos.</div>`; return; }
+    if (error) { document.getElementById("e").innerHTML = `<div class="err">Usuario o clave incorrectos.</div>`; return; }
     boot();
   };
 }
@@ -149,7 +152,7 @@ async function boot() {
     return viewLogin("Sin conexión. Conéctate una vez para entrar.");
   }
   if (s && s.activo) localStorage.setItem("bc_yo", JSON.stringify(s));
-  if (!s || !s.activo) { await sb.auth.signOut(); return viewLogin("Esta cuenta no tiene acceso al Beer Club."); }
+  if (!s || !s.activo) { await sb.auth.signOut(); localStorage.removeItem("bc_yo"); return viewLogin("Este usuario no tiene acceso. Pídele a la dueña que lo active."); }
   yo = s;
   tab = sessionStorage.getItem("bc_tab") || (yo.rol === "admin" ? "panel" : "sumar");
   if (tab === "panel" && yo.rol !== "admin") tab = "sumar";
@@ -168,7 +171,7 @@ function shell() {
     sumar: ["Sumar puntos", "Cuando un socio paga su cuenta. Escanea el QR de su tarjeta y escribe el total."],
     canjear: ["Entregar un premio", "Cuando el cliente te muestra un código de 6 números en su celular."],
     eventos: ["Eventos", "Confirmar transferencias de entradas y escanear en la puerta."],
-    panel: ["Resumen del club", "Cuántos socios hay, quién no ha vuelto y los últimos movimientos."]
+    panel: ["Resumen del club", "Cuántos socios hay, quién no ha vuelto, últimos movimientos y tu equipo."]
   };
   app.innerHTML = `
   <div class="topbar"><span class="grow">Hola, ${esc(yo.nombre)}</span><button id="out">Salir</button></div>
@@ -263,7 +266,9 @@ function viewCanjear() {
     <input class="input" name="c" inputmode="numeric" maxlength="6" pattern="\\d{6}" placeholder="000000" autocomplete="off" style="font-family:'Space Mono';font-size:40px;letter-spacing:.3em;text-align:center;min-height:80px" required>
     <div id="e"></div>
     <button class="btn btn-wood" id="ok">Confirmar canje</button>
+    ${yo.rol === "admin" ? `<button type="button" class="btn btn-paper" id="edp" style="margin-top:18px">Editar premios y puntos</button>` : ""}
   </form>`;
+  const edp = document.getElementById("edp"); if (edp) edp.onclick = viewPremios;
   const f = document.getElementById("f"); f.c.focus();
   f.onsubmit = async ev => {
     ev.preventDefault();
@@ -278,6 +283,43 @@ function viewCanjear() {
     </section>`;
     document.getElementById("sig").onclick = viewCanjear;
   };
+}
+
+/* ─── Premios (admin) ─── */
+async function viewPremios() {
+  V().innerHTML = `<div class="spin"></div>`;
+  const { data: rs, error } = await sb.from("recompensas").select("id,nombre,costo_puntos,activa,orden").order("orden");
+  if (error) { V().innerHTML = `<div class="pad"><div class="err">${esc(errMsg(error))}</div></div>`; return; }
+  const card = r => `<form class="box ped" data-id="${r ? r.id : ""}" style="${r && !r.activa ? "opacity:.6" : ""}">
+    <label class="field">Premio<input class="input" name="n" required minlength="2" value="${r ? esc(r.nombre) : ""}" placeholder="Ej: Jarra de barril"></label>
+    <div class="row" style="align-items:flex-end">
+      <label class="field grow">Cuesta (puntos)<input class="input" name="p" required inputmode="numeric" pattern="\\d+" value="${r ? r.costo_puntos : ""}" placeholder="150"></label>
+      <span class="small muted" style="padding-bottom:16px;white-space:nowrap" data-eq>${r ? "≈ $" + Math.ceil(r.costo_puntos / 10) : ""}</span>
+    </div>
+    <label class="check" style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" name="a" style="width:20px;height:20px;accent-color:var(--green)" ${!r || r.activa ? "checked" : ""}>Visible para los clientes</label>
+    <div data-e></div>
+    <button class="btn ${r ? "btn-paper" : "btn-wood"} btn-sm" style="width:100%">${r ? "Guardar cambios" : "Agregar premio"}</button>
+  </form>`;
+  V().innerHTML = `<section class="pad stack">
+    <button class="link" id="atras" style="justify-self:start">← Volver a canjear</button>
+    <h2 style="font-size:26px">Premios</h2>
+    <p class="small muted">Cada $1 de consumo da 10 puntos. Si ocultas un premio, deja de aparecer en la tarjeta de los clientes.</p>
+    ${rs.map(card).join("")}
+    <span class="kick" style="margin-top:10px">Nuevo premio</span>
+    ${card(null)}
+  </section>`;
+  document.getElementById("atras").onclick = viewCanjear;
+  V().querySelectorAll("form[data-id]").forEach(f => {
+    f.p.oninput = () => { const v = parseInt(f.p.value); f.querySelector("[data-eq]").textContent = v > 0 ? "≈ $" + Math.ceil(v / 10) : ""; };
+    f.onsubmit = async ev => {
+      ev.preventDefault();
+      const b = f.querySelector("button"), e = f.querySelector("[data-e]"); b.disabled = true; e.innerHTML = "";
+      const { error } = await sb.rpc("guardar_recompensa", { p_id: f.dataset.id ? +f.dataset.id : null, p_nombre: f.n.value, p_costo: parseInt(f.p.value), p_activa: f.a.checked });
+      b.disabled = false;
+      if (error) { e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; return; }
+      viewPremios();
+    };
+  });
 }
 
 /* ─── Panel (dueña) ─── */
@@ -313,8 +355,58 @@ async function viewPanel() {
       ${(mov || []).map(m => `<div><div class="grow"><strong style="display:block">${esc(m.clientes?.nombre)}</strong><span class="small muted">${f(m.creado_en)} · ${esc(m.nota || m.tipo)}${m.monto_compra ? " · $" + m.monto_compra : ""}</span></div><span class="${m.puntos >= 0 ? "plus" : "minus"}">${m.puntos >= 0 ? "+" : ""}${m.puntos}</span></div>`).join("") || `<div class="small muted">Aún no hay movimientos.</div>`}
     </div>
     <button class="btn btn-paper" id="rf">Actualizar</button>
-  </section>`;
+  </section>
+  <section class="pad stack" style="padding-top:6px" id="equipo"><span class="kick">Equipo</span><div class="spin" style="margin:20px auto"></div></section>`;
   document.getElementById("rf").onclick = viewPanel;
+  pintarEquipo();
+}
+
+async function pintarEquipo() {
+  const el = document.getElementById("equipo"); if (!el) return;
+  const { data: eq, error } = await sb.rpc("equipo");
+  if (error) { el.innerHTML = `<span class="kick">Equipo</span><div class="err">${esc(errMsg(error))}</div>`; return; }
+  const ROL = { admin: "Admin · ve todo", mesero: "Staff · sin Resumen" };
+  el.innerHTML = `<span class="kick">Equipo</span>
+    <div class="box list" style="padding:4px 16px">${eq.map(s => `<div style="flex-wrap:wrap;${s.activo ? "" : "opacity:.55"}"><div class="grow"><strong style="display:block">${esc(s.nombre)}${s.yo ? " (tú)" : ""}</strong><span class="small muted">${s.activo ? ROL[s.rol] : "Sin acceso"} · usuario: ${esc(s.usuario)}</span></div>
+      ${s.yo ? "" : `<div class="row" style="gap:14px">${s.activo ? `<button class="link" data-a="${s.rol === "admin" ? "mesero" : "admin"}" data-id="${s.id}">${s.rol === "admin" ? "Hacer staff" : "Hacer admin"}</button><button class="link" data-a="clave" data-id="${s.id}">Clave</button><button class="link" data-a="desactivar" data-id="${s.id}">Quitar</button>` : `<button class="link" data-a="mesero" data-id="${s.id}">Reactivar</button>`}</div>`}</div>`).join("")}</div>
+    <form class="box ped" id="nu">
+      <strong style="font-family:'Space Mono';font-size:17px">Agregar persona</strong>
+      <label class="field">Nombre<input class="input" name="n" required minlength="2" placeholder="Carlos"></label>
+      <label class="field">Usuario<input class="input" name="u" required autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="carlos"></label>
+      <label class="field">Clave<input class="input" name="c" required minlength="6" autocomplete="off" placeholder="Mínimo 6 caracteres"></label>
+      <div class="field">Rol<div class="seg" role="radiogroup"><button type="button" data-r="mesero" aria-selected="true">Staff</button><button type="button" data-r="admin" aria-selected="false">Admin</button></div></div>
+      <span class="small muted" id="rd">Staff: suma puntos, entrega premios, confirma pagos y usa la puerta.</span>
+      <div id="ne"></div>
+      <button class="btn btn-wood">Crear usuario</button>
+    </form>`;
+  let rol = "mesero";
+  const RD = { mesero: "Staff: suma puntos, entrega premios, confirma pagos y usa la puerta.", admin: "Admin: todo lo anterior, más Resumen, premios, eventos y equipo." };
+  el.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { rol = b.dataset.r; el.querySelectorAll("[data-r]").forEach(x => x.setAttribute("aria-selected", x === b)); document.getElementById("rd").textContent = RD[rol]; });
+  document.getElementById("nu").onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, b = f.querySelector(".btn"), e = document.getElementById("ne"); b.disabled = true; e.innerHTML = "";
+    const usuario = f.u.value.trim().toLowerCase(), nombre = f.n.value.trim(), clave = f.c.value;
+    const { error } = await sb.rpc("crear_staff", { p_nombre: nombre, p_usuario: usuario, p_clave: clave, p_rol: rol });
+    b.disabled = false;
+    if (error) { e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; return; }
+    const msg = `Hola ${nombre}, ya tienes acceso al panel de Beer Garden 🍺\n${location.href.split("#")[0]}\nUsuario: ${usuario}\nClave: ${clave}`;
+    await pintarEquipo();
+    document.getElementById("ne").innerHTML = `<div class="ok"><span class="kick">Usuario creado</span><span>Envíale sus datos para entrar.</span><a class="btn btn-grass btn-sm" style="width:100%" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">Enviar por WhatsApp</a></div>`;
+  };
+  el.querySelectorAll("[data-a]").forEach(b => b.onclick = async () => {
+    const a = b.dataset.a, s = eq.find(x => x.id === b.dataset.id);
+    if (a === "clave") {
+      const c = prompt(`Nueva clave para ${s.nombre} (mínimo 6):`); if (!c) return;
+      const { error } = await sb.rpc("clave_staff", { p_id: s.id, p_clave: c });
+      if (error) { alert(errMsg(error)); return; }
+      alert("Clave cambiada. Avísale a " + s.nombre + "."); return;
+    }
+    const q = { mesero: s.activo ? `¿Cambiar a ${s.nombre} a staff? Dejará de ver Resumen.` : `¿Devolverle el acceso a ${s.nombre}?`, admin: `¿Hacer admin a ${s.nombre}? Verá Resumen y podrá editar premios, eventos y equipo.`, desactivar: `¿Quitarle el acceso a ${s.nombre}? No podrá entrar al panel.` }[a];
+    if (!confirm(q)) return;
+    const { error } = await sb.rpc("gestionar_staff", { p_id: s.id, p_accion: a });
+    if (error) { alert(errMsg(error)); return; }
+    pintarEquipo();
+  });
 }
 
 /* ─── Eventos ─── */
