@@ -526,9 +526,11 @@ async function viewPagos() {
       ${yo.rol === "admin" ? `<button class="link" data-x="${p.id}" style="justify-self:start">Anular pedido</button>` : ""}
     </details>`; }).join("") || `<p class="small muted">Aún no hay pagos confirmados.</p>`}
     ${yo.rol === "admin" ? `<button class="link" id="act" style="justify-self:start">${evSel.activo === false ? "Abrir la venta otra vez" : "Cerrar la venta de entradas"}</button>` : ""}
+    <button class="btn btn-grass" id="xls">Exportar lista (Excel)</button>
     <button class="btn btn-paper" id="rf">Actualizar</button>
   </section>`;
   aviso = "";
+  document.getElementById("xls").onclick = () => exportarLista(peds);
   document.getElementById("q").oninput = ev => { const q = ev.target.value.trim().toLowerCase(); S().querySelectorAll("[data-k]").forEach(c => c.style.display = !q || c.dataset.k.includes(q) ? "" : "none"); };
   document.getElementById("rf").onclick = viewPagos;
   S().querySelectorAll("[data-ok]").forEach(b => b.onclick = async () => {
@@ -564,6 +566,23 @@ async function viewPagos() {
     if (error) { alert(errMsg(error)); return; }
     evSel.activo = on; sessionStorage.setItem("bc_ev", JSON.stringify(evSel)); viewPagos();
   };
+}
+
+function exportarLista(peds) {
+  const q = v => { v = v == null ? "" : String(v); return /[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  const f = d => d ? new Date(d).toLocaleString("es") : "";
+  const EP = { pendiente: "Por confirmar", pagado: "Pagado", anulado: "Anulado" }, EE = { usada: "Entró", anulada: "Anulada" };
+  const rows = [["Referencia", "Nombre", "Celular", "Socio Beer Club", "Pago", "Fecha de compra", "Total pedido", "Entrada", "Tipo", "Estado entrada", "Hora de ingreso"]];
+  peds.forEach(p => (p.entradas && p.entradas.length ? p.entradas : [{}]).forEach(x => rows.push([
+    p.ref, p.nombre, "+" + p.telefono, p.socio ? "Sí" : "No", EP[p.estado] || p.estado, f(p.creado_en), p.total,
+    x.n ? `${x.n} de ${p.entradas.length}` : "", x.tipo || "", x.estado ? (EE[x.estado] || (p.estado === "pagado" ? "Sin usar" : "—")) : "", f(x.usado_en)
+  ])));
+  const csv = "\ufeff" + rows.map(r => r.map(q).join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `${evSel.slug || "evento"}-asistentes-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
 /* Puerta */
