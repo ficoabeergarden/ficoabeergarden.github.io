@@ -225,6 +225,9 @@ const cacheSet = (k, v) => { try { localStorage.setItem("bc_c_" + k, JSON.string
 const cacheGet = k => { try { return JSON.parse(localStorage.getItem("bc_c_" + k)); } catch (_) { return null; } };
 const qrSvg = codigo => { const q = qrcode(0, "M"); q.addData("BGE:" + codigo); q.make(); return q.createSvgTag({ cellSize: 6, margin: 4, scalable: true }); };
 const offBar = on => on ? `<div class="offline">Sin conexión · mostrando lo guardado en este teléfono</div>` : "";
+const vende = t => !t.estado || t.estado === "vigente";
+const ETQ = { proxima: "Próximamente", agotada: "Agotada", cerrada: "Cerrada", puerta: "En puerta" };
+const notaT = t => t.estado === "proxima" ? (t.abre ? " · desde " + fFecha(t.abre) : t.tras ? " · al agotarse " + esc(t.tras) : "") : t.estado === "puerta" ? " · se paga al llegar" : vende(t) && t.hasta ? " · hasta " + fFecha(t.hasta) : "";
 let pollT = null;
 
 async function rpc(fn, args, cacheKey) {
@@ -275,14 +278,15 @@ async function viewLista() {
   </section>` : ""}
   <section class="pad stack" style="gap:14px;padding-top:${mios.length ? 6 : 10}px">
     ${mios.length ? `<span class="kick">Eventos</span>` : ""}
-    ${evs.map(ev => { const desde = Math.min(...ev.tipos.map(t => +t.precio)); const agot = ev.tipos.every(t => t.disponibles === 0);
+    ${evs.map(ev => { const ven = ev.tipos.filter(t => vende(t) && t.disponibles !== 0); const desde = Math.min(...(ven.length ? ven : ev.tipos).map(t => +t.precio));
+      const st = ven.length || ev.tipos.some(t => t.estado === "proxima") ? "ok" : ev.tipos.some(t => t.estado === "puerta") ? "puerta" : "agot";
       return `<div class="box ev">
         ${ev.foto_url ? `<a href="?e=${esc(ev.slug)}"><img class="flyer" src="${esc(ev.foto_url)}" alt="${esc(ev.nombre)}" loading="lazy"></a>` : ""}
         <span class="date">${fFecha(ev.fecha)} · ${fHora(ev.fecha)}</span>
         <h3>${esc(ev.nombre)}</h3>
         ${ev.descripcion ? `<p class="small muted">${esc(ev.descripcion)}</p>` : ""}
-        <div class="row" style="margin-top:2px"><span class="grow small">${ev.tipos.length > 1 ? "Desde " : ""}<strong style="font-family:'Space Mono';font-size:18px">${money(desde)}</strong></span>
-        ${agot ? `<span class="tag no">Agotado</span>` : `<a class="btn btn-wood btn-sm" href="?e=${esc(ev.slug)}">Comprar entradas</a>`}</div>
+        <div class="row" style="margin-top:2px"><span class="grow small">${ven.length > 1 || (!ven.length && ev.tipos.length > 1) ? "Desde " : ""}<strong style="font-family:'Space Mono';font-size:18px">${money(desde)}</strong></span>
+        ${st === "agot" ? `<span class="tag no">Agotado</span>` : st === "puerta" ? `<span class="tag wait">Venta en puerta</span>` : `<a class="btn btn-wood btn-sm" href="?e=${esc(ev.slug)}">Comprar entradas</a>`}</div>
       </div>`; }).join("") || `<p class="muted">${off ? "Conéctate a internet para ver los eventos." : "Pronto anunciamos el próximo evento."}</p>`}
   </section>`;
 }
@@ -297,7 +301,7 @@ async function viewComprar(slug) {
   if (!ev) { app.innerHTML = `<div class="topbar"><a href="agenda.html">← Agenda</a><span>Agenda</span></div><div class="pad stack"><h2 style="font-size:28px">Evento no disponible</h2><p class="muted">Ya pasó o se cerró la venta.</p><a class="btn btn-paper" href="agenda.html">Ver agenda</a></div>`; return; }
   let socio = null;
   if (club) { try { const { data } = await sb.rpc("mi_tarjeta", { p_token: club }); socio = data; } catch (_) {} }
-  const cant = {}; ev.tipos.forEach(t => cant[t.id] = 0);
+  const vt = ev.tipos.filter(vende), cant = {}; vt.forEach(t => cant[t.id] = 0);
   app.innerHTML = `
   <div class="topbar"><a href="agenda.html">← Agenda</a><span>Entradas</span></div>
   <section class="pad stack" style="gap:10px">
@@ -309,7 +313,7 @@ async function viewComprar(slug) {
   <form class="pad stack" id="f" style="padding-top:4px">
     <span class="kick">1 · Elige tus entradas</span>
     <div class="box list" style="padding:4px 16px">
-      ${ev.tipos.map(t => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block;font-size:17px">${esc(t.nombre)}</strong><span class="small muted">${money(t.precio)}${t.disponibles === null ? "" : t.disponibles === 0 ? " · agotado" : t.disponibles <= 20 ? " · quedan " + t.disponibles : ""}</span></div>
+      ${ev.tipos.map(t => !vende(t) ? `<div><div class="grow"><strong style="font-family:'Space Mono';display:block;font-size:17px">${esc(t.nombre)}</strong><span class="small muted">${money(t.precio)}${notaT(t)}</span></div><span class="tag ${t.estado === "proxima" || t.estado === "puerta" ? "wait" : "no"}">${ETQ[t.estado] || ""}</span></div>` : `<div><div class="grow"><strong style="font-family:'Space Mono';display:block;font-size:17px">${esc(t.nombre)}</strong><span class="small muted">${money(t.precio)}${t.disponibles === null ? "" : t.disponibles === 0 ? " · agotado" : t.disponibles <= 20 ? " · quedan " + t.disponibles : ""}${notaT(t)}</span></div>
         <div class="stepper"><button type="button" data-m="${t.id}" aria-label="Quitar">−</button><b id="c${t.id}">0</b><button type="button" data-p="${t.id}" aria-label="Agregar" ${t.disponibles === 0 ? "disabled" : ""}>+</button></div></div>`).join("")}
     </div>
     <span class="small muted" style="margin-top:-4px">Hasta 10 por pedido. Cada entrada tiene su propio QR.</span>
@@ -323,9 +327,9 @@ async function viewComprar(slug) {
     <button class="btn btn-wood" id="ok" disabled>Reservar entradas</button>
     <p class="small muted">Al reservar te mostramos los datos para transferir. Tus QR aparecen aquí cuando confirmemos el pago.</p>
   </form>`;
-  const total = () => ev.tipos.reduce((s, t) => s + cant[t.id] * t.precio, 0), n = () => Object.values(cant).reduce((a, b) => a + b, 0);
+  const total = () => vt.reduce((s, t) => s + cant[t.id] * t.precio, 0), n = () => Object.values(cant).reduce((a, b) => a + b, 0);
   const upd = () => {
-    ev.tipos.forEach(t => { document.getElementById("c" + t.id).textContent = cant[t.id];
+    vt.forEach(t => { document.getElementById("c" + t.id).textContent = cant[t.id];
       app.querySelector(`[data-m="${t.id}"]`).disabled = !cant[t.id];
       app.querySelector(`[data-p="${t.id}"]`).disabled = n() >= 10 || t.disponibles === 0 || (t.disponibles !== null && cant[t.id] >= t.disponibles); });
     document.getElementById("tot").textContent = money(total());

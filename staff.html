@@ -86,6 +86,15 @@ p{margin:0;line-height:1.5}
 .dotc.on{background:#2f5d34}
 .trow{display:grid;grid-template-columns:minmax(0,1fr) 76px 76px 32px;gap:6px;align-items:center}
 .trow .input{min-height:48px;font-size:15px;padding:0 10px}
+.tipo{padding:10px;display:grid;gap:8px}
+.tipo .chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.tipo .chk input,.chkx{width:22px;height:22px;accent-color:var(--green);flex:none}
+.tipo .field .input{min-height:46px;font-size:15px}
+.stepper{display:grid;grid-template-columns:44px 40px 44px;align-items:center;text-align:center}
+.stepper button{width:44px;height:44px;border:1px solid var(--ink);background:var(--paper);font:700 22px "Space Mono",monospace;cursor:pointer;color:var(--ink);border-radius:8px}
+.stepper button:disabled{opacity:.35;cursor:not-allowed}
+.stepper b{font-family:"Space Mono";font-size:20px}
+html.hw .stepper button{background:#0c0c0c;border-color:#303030;color:#f3f3f3}
 .warn{background:#fbefcf;border:1px solid #8a5a00;padding:10px 12px;font-size:13px;line-height:1.4}
 textarea.input{padding:12px 14px;min-height:96px;resize:vertical;font-size:15px}
 .foto{position:relative;display:grid;place-items:center;gap:6px;aspect-ratio:4/5;max-height:340px;width:100%;max-width:272px;border:1.5px dashed var(--muted);border-radius:14px;background:var(--paper);cursor:pointer;overflow:hidden;text-align:center;padding:16px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--muted)}
@@ -520,9 +529,9 @@ async function viewPagos() {
     </div>`).join("") || `<p class="small muted">Nada pendiente.</p>`}
     <span class="kick" style="margin-top:10px">Confirmados · ${pag.length}</span>
     ${pag.map(p => { const vivas = p.entradas.filter(x => x.estado !== "anulada"); return `<details class="box ped" data-k="${key(p)}">
-      <summary class="row"><div class="grow"><strong style="font-family:'Space Mono';font-size:16px;display:block">${esc(p.nombre)}</strong><span class="small muted">${esc(p.ref)} · ${esc(resumen(p.entradas))}</span></div><span class="small">${vivas.filter(x => x.estado === "usada").length}/${vivas.length} adentro</span></summary>
+      <summary class="row"><div class="grow"><strong style="font-family:'Space Mono';font-size:16px;display:block">${esc(p.nombre)}</strong><span class="small muted">${esc(p.ref)} · ${esc(resumen(p.entradas))}${p.canal === "puerta" ? ` · en puerta (${esc(p.metodo || "")})` : ""}</span></div><span class="small">${vivas.filter(x => x.estado === "usada").length}/${vivas.length} adentro</span></summary>
       <div class="list">${vivas.map(x => `<div><span class="grow small">${x.n}. ${esc(x.tipo)}</span>${x.estado === "usada" ? `<span class="small muted">Entró ${fH(x.usado_en)}</span>` : `<button class="link" data-re="${x.id}">Reemitir QR</button>`}</div>`).join("")}</div>
-      <a class="btn btn-grass btn-sm" style="width:100%" target="_blank" rel="noopener" href="${waEntradas(p, vivas.length)}">Reenviar por WhatsApp</a>
+      ${p.canal === "puerta" ? "" : `<a class="btn btn-grass btn-sm" style="width:100%" target="_blank" rel="noopener" href="${waEntradas(p, vivas.length)}">Reenviar por WhatsApp</a>`}
       ${yo.rol === "admin" ? `<button class="link" data-x="${p.id}" style="justify-self:start">Anular pedido</button>` : ""}
     </details>`; }).join("") || `<p class="small muted">Aún no hay pagos confirmados.</p>`}
     ${yo.rol === "admin" ? `<button class="link" id="act" style="justify-self:start">${evSel.activo === false ? "Abrir la venta otra vez" : "Cerrar la venta de entradas"}</button>` : ""}
@@ -572,9 +581,9 @@ function exportarLista(peds) {
   const q = v => { v = v == null ? "" : String(v); return /[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
   const f = d => d ? new Date(d).toLocaleString("es") : "";
   const EP = { pendiente: "Por confirmar", pagado: "Pagado", anulado: "Anulado" }, EE = { usada: "Entró", anulada: "Anulada" };
-  const rows = [["Referencia", "Nombre", "Celular", "Socio Beer Club", "Pago", "Fecha de compra", "Total pedido", "Entrada", "Tipo", "Estado entrada", "Hora de ingreso"]];
+  const rows = [["Referencia", "Nombre", "Celular", "Socio Beer Club", "Pago", "Fecha de compra", "Total pedido", "Venta", "Método", "Entrada", "Tipo", "Estado entrada", "Hora de ingreso"]];
   peds.forEach(p => (p.entradas && p.entradas.length ? p.entradas : [{}]).forEach(x => rows.push([
-    p.ref, p.nombre, "+" + p.telefono, p.socio ? "Sí" : "No", EP[p.estado] || p.estado, f(p.creado_en), p.total,
+    p.ref, p.nombre, "+" + p.telefono, p.socio ? "Sí" : "No", EP[p.estado] || p.estado, f(p.creado_en), p.total, p.canal === "puerta" ? "En puerta" : "Online", p.metodo || (p.canal === "puerta" ? "" : "Transferencia"),
     x.n ? `${x.n} de ${p.entradas.length}` : "", x.tipo || "", x.estado ? (EE[x.estado] || (p.estado === "pagado" ? "Sin usar" : "—")) : "", f(x.usado_en)
   ])));
   const csv = "\ufeff" + rows.map(r => r.map(q).join(";")).join("\n");
@@ -589,6 +598,7 @@ function exportarLista(peds) {
 function viewPuerta() {
   lock = false;
   S().innerHTML = `<section class="pad stack" style="padding-top:6px">
+    <button class="btn btn-wood" id="vp">+ Venta en puerta</button>
     <div class="box" id="est" style="padding:12px 14px;display:grid;gap:8px"></div>
     <div id="res"></div>
     <div id="reader"></div>
@@ -598,6 +608,7 @@ function viewPuerta() {
     </details>
   </section>`;
   paintEstado();
+  document.getElementById("vp").onclick = async () => { await stopScan(); viewVenta(); };
   document.getElementById("bn").oninput = ev => {
     const q = ev.target.value.trim().toLowerCase(), L = lsGet(KP(), null), bl = document.getElementById("bl");
     if (!L) { bl.innerHTML = `<div class="small muted">Descarga la lista primero.</div>`; return; }
@@ -702,9 +713,68 @@ setInterval(syncCola, 15000);
 addEventListener("online", () => { paintEstado(); syncCola(); });
 addEventListener("offline", paintEstado);
 
+/* Venta en puerta */
+async function viewVenta() {
+  S().innerHTML = `<div class="spin"></div>`;
+  const { data: tipos, error } = await sb.rpc("tipos_staff", { p_evento: evSel.id });
+  if (error) { S().innerHTML = `<div class="pad stack"><div class="err">${esRed(error) ? "Para vender en puerta necesitas conexión." : esc(errMsg(error))}</div><button class="btn btn-paper" id="vol">Volver a la puerta</button></div>`; document.getElementById("vol").onclick = viewPuerta; return; }
+  const EST = { vigente: "Precio actual", puerta: "Puerta", proxima: "Etapa siguiente", agotada: "Agotada", cerrada: "Etapa cerrada" };
+  const cant = {}; tipos.forEach(t => cant[t.id] = 0);
+  let metodo = "efectivo";
+  S().innerHTML = `<form class="pad stack" id="fv" style="padding-top:6px">
+    <button type="button" class="link" id="vol" style="justify-self:start">← Puerta</button>
+    <h2 style="font-size:26px;line-height:1">Venta en puerta</h2>
+    <span class="small muted">Cobra, registra y la persona entra. No necesita QR.</span>
+    <div class="box list" style="padding:4px 16px">
+      ${tipos.map(t => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block;font-size:17px">${esc(t.nombre)}</strong><span class="small muted">${money(t.precio)} · ${EST[t.estado] || ""}${t.disponibles !== null ? " · quedan " + t.disponibles : ""}</span></div>
+        <div class="stepper"><button type="button" data-m="${t.id}" aria-label="Quitar">−</button><b id="c${t.id}">0</b><button type="button" data-p="${t.id}" aria-label="Agregar">+</button></div></div>`).join("") || `<p class="small muted">Este evento no tiene tipos de entrada.</p>`}
+    </div>
+    <span class="kick">Pagó con</span>
+    <div class="seg" role="tablist"><button type="button" role="tab" data-mt="efectivo" aria-selected="true">Efectivo</button><button type="button" role="tab" data-mt="transferencia" aria-selected="false">Transferencia</button></div>
+    <label class="field">Nombre (opcional)<input class="input" name="nombre" autocomplete="off"></label>
+    <label class="field">Celular (opcional)<input class="input" name="tel" inputmode="tel" autocomplete="off" placeholder="099 123 4567"></label>
+    <span class="small muted" style="margin-top:-6px">Si es socio del Beer Club, con su celular suma puntos.</span>
+    <div class="box row" style="padding:14px 16px"><span class="grow small" style="letter-spacing:.14em;text-transform:uppercase">Total</span><strong id="tot" style="font-family:'Space Mono';font-size:28px">$0</strong></div>
+    <div id="e"></div>
+    <button class="btn btn-wood" id="ok" disabled>Cobrar y dejar pasar</button>
+  </form>`;
+  const total = () => tipos.reduce((s, t) => s + cant[t.id] * t.precio, 0), n = () => Object.values(cant).reduce((a, b) => a + b, 0);
+  const upd = () => {
+    tipos.forEach(t => { document.getElementById("c" + t.id).textContent = cant[t.id];
+      S().querySelector(`[data-m="${t.id}"]`).disabled = !cant[t.id];
+      S().querySelector(`[data-p="${t.id}"]`).disabled = n() >= 20 || (t.disponibles !== null && cant[t.id] >= t.disponibles); });
+    document.getElementById("tot").textContent = money(total());
+    const b = document.getElementById("ok"); b.disabled = !n(); b.textContent = n() ? `Cobrar ${money(total())} · ${n()} ${n() === 1 ? "persona" : "personas"}` : "Cobrar y dejar pasar";
+  };
+  S().querySelectorAll("[data-p]").forEach(b => b.onclick = () => { cant[b.dataset.p]++; upd(); });
+  S().querySelectorAll("[data-m]").forEach(b => b.onclick = () => { cant[b.dataset.m] = Math.max(0, cant[b.dataset.m] - 1); upd(); });
+  S().querySelectorAll("[data-mt]").forEach(b => b.onclick = () => { metodo = b.dataset.mt; S().querySelectorAll("[data-mt]").forEach(x => x.setAttribute("aria-selected", x === b)); });
+  document.getElementById("vol").onclick = viewPuerta;
+  upd();
+  document.getElementById("fv").onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, b = document.getElementById("ok"), e = document.getElementById("e");
+    if (!confirm(`¿Ya cobraste ${money(total())} en ${metodo}?`)) return;
+    b.disabled = true; e.innerHTML = "";
+    let tel = f.tel.value.replace(/\D/g, ""); if (tel.startsWith("0")) tel = "593" + tel.slice(1);
+    const { data: r, error } = await sb.rpc("venta_puerta", { p_evento: evSel.id, p_metodo: metodo, p_nombre: f.nombre.value, p_telefono: tel || null,
+      p_items: Object.entries(cant).filter(([, q]) => q > 0).map(([tipo, cantidad]) => ({ tipo: +tipo, cantidad })) });
+    if (error) { b.disabled = false; e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; return; }
+    S().innerHTML = `<section class="pad stack" style="padding-top:6px">
+      <div class="ok"><span class="kick">Adelante</span><span class="big" style="font-size:44px">${r.cantidad} ${r.cantidad === 1 ? "persona" : "personas"}</span><span>${esc(r.nombre)} · ${money(r.total)} en ${metodo}${r.puntos ? ` · +${r.puntos} pts Beer Club` : ""}</span></div>
+      <button class="btn btn-wood" id="otra">Otra venta</button>
+      <button class="btn btn-paper" id="vol">Volver a escanear</button></section>`;
+    document.getElementById("otra").onclick = viewVenta;
+    document.getElementById("vol").onclick = viewPuerta;
+  };
+}
+
 /* Nuevo evento (admin) */
 function viewNuevoEvento() {
-  const fila = (n = "", ph = "General") => `<div class="trow"><input class="input" data-f="nombre" placeholder="${ph}" value="${n}"><input class="input" data-f="precio" inputmode="decimal" placeholder="$"><input class="input" data-f="cupo" inputmode="numeric" placeholder="Cupo"><button type="button" class="link" data-del aria-label="Quitar">✕</button></div>`;
+  const fila = (n = "", ph = "General", p = "", sigue = false, puerta = false) => `<div class="box tipo"><div class="trow"><input class="input" data-f="nombre" placeholder="${ph}" value="${n}"><input class="input" data-f="precio" inputmode="decimal" placeholder="$" value="${p}"><input class="input" data-f="cupo" inputmode="numeric" placeholder="Cupo"><button type="button" class="link" data-del aria-label="Quitar">✕</button></div>
+    <label class="field">Se vende hasta (opcional)<input class="input" data-f="hasta" type="datetime-local"></label>
+    <label class="chk"><input type="checkbox" data-f="sigue" ${sigue ? "checked" : ""}>Es la etapa siguiente del de arriba</label>
+    <label class="chk"><input type="checkbox" data-f="puerta" ${puerta ? "checked" : ""}>Solo se vende en puerta</label></div>`;
   V().innerHTML = `<form class="pad stack" id="f">
     <button type="button" class="link" id="atras" style="justify-self:start">← Eventos</button>
     <h2 style="font-size:28px">Nuevo evento</h2>
@@ -719,22 +789,29 @@ function viewNuevoEvento() {
     <span class="kick">Tipos de entrada</span>
     <div class="trow small muted" style="margin-bottom:-8px"><span>Nombre</span><span>Precio</span><span>Cupo</span><span></span></div>
     <div id="tipos" class="stack" style="gap:8px">${fila("", "General")}${fila("", "VIP")}</div>
-    <button type="button" class="btn btn-paper btn-sm" id="add">+ Agregar tipo</button>
-    <span class="small muted">Cupo vacío = sin límite.</span>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-paper btn-sm grow" id="add">+ Agregar tipo</button><button type="button" class="btn btn-paper btn-sm grow" id="etapas">+ Etapas de precio</button></div>
+    <span class="small muted">Cupo vacío = sin límite. Etapas: cada una se cierra al agotar su cupo o al llegar su fecha (lo que pase primero) y se abre la siguiente.</span>
     <div id="e"></div>
     <button class="btn btn-wood" id="ok">Crear evento</button>
   </form>`;
   const T = document.getElementById("tipos");
-  const bindDel = () => T.querySelectorAll("[data-del]").forEach(b => b.onclick = () => b.parentElement.remove());
+  const bindDel = () => T.querySelectorAll("[data-del]").forEach(b => b.onclick = () => b.closest(".tipo").remove());
   bindDel();
   document.getElementById("add").onclick = () => { T.insertAdjacentHTML("beforeend", fila("", "Tipo")); bindDel(); };
+  document.getElementById("etapas").onclick = () => {
+    if ([...T.querySelectorAll('[data-f="nombre"]')].every(i => !i.value.trim())) T.innerHTML = "";
+    T.insertAdjacentHTML("beforeend", fila("General · Preventa", "", "10") + fila("General · Segunda etapa", "", "15", true) + fila("General · Día del evento", "", "20", true));
+    bindDel();
+  };
   document.getElementById("atras").onclick = viewEventos;
   const ff = document.getElementById("ffile");
   ff.onchange = () => { const f = ff.files[0], p = document.getElementById("fprev"); if (!f) return; p.src = URL.createObjectURL(f); p.hidden = false; };
   document.getElementById("f").onsubmit = async ev => {
     ev.preventDefault();
     const f = ev.target, b = document.getElementById("ok"), e = document.getElementById("e");
-    const tipos = [...T.querySelectorAll(".trow")].map(r => ({ nombre: r.querySelector('[data-f="nombre"]').value.trim(), precio: parseFloat(r.querySelector('[data-f="precio"]').value.replace(",", ".")), cupo: r.querySelector('[data-f="cupo"]').value.trim() })).filter(t => t.nombre && !isNaN(t.precio));
+    const tipos = [...T.querySelectorAll(".tipo")].map(r => { const v = k => r.querySelector(`[data-f="${k}"]`); return { nombre: v("nombre").value.trim(), precio: parseFloat(v("precio").value.replace(",", ".")), cupo: v("cupo").value.trim(), hasta: v("hasta").value ? new Date(v("hasta").value).toISOString() : "", sigue: v("sigue").checked, solo_puerta: v("puerta").checked }; }).filter(t => t.nombre && !isNaN(t.precio));
+    let gid = 0;
+    tipos.forEach((t, i) => { if (t.sigue && i > 0) { const a = tipos[i - 1]; if (a.grupo == null) a.grupo = ++gid; t.grupo = a.grupo; } delete t.sigue; });
     if (!tipos.length) { e.innerHTML = `<div class="err">Agrega al menos un tipo con nombre y precio.</div>`; return; }
     b.disabled = true; e.innerHTML = "";
     let foto = null;

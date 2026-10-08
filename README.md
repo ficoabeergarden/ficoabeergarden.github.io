@@ -39,3 +39,8 @@ Menú de domicilio incluido (precios de la carta): alitas y costillitas, hamburg
 3. `staff.html` → pestaña **Eventos**: crear evento (admin), confirmar pagos, reemitir QR, y **Puerta** para escanear.
 4. Antes de abrir puertas toca **Descargar lista del evento** con wifi: así la puerta valida sin internet y sincroniza al volver la señal.
 5. `sw.js` guarda las páginas en el teléfono para que abran sin conexión.
+
+**Etapas de precio y venta en puerta** (ejecutar `supabase/eventos-etapas.sql` una vez):
+- Al crear el evento, **+ Etapas de precio** arma Preventa → Segunda etapa → Día del evento. Cada etapa se cierra al agotar su cupo o al llegar su fecha "Se vende hasta" (lo que pase primero) y se abre la siguiente. La agenda solo vende la etapa vigente.
+- **Solo se vende en puerta**: el tipo aparece en la agenda como "En puerta" y no se vende online.
+- **Puerta → + Venta en puerta**: el staff elige entradas, efectivo o transferencia, y la persona queda adentro. Necesita conexión. Sale en el Excel como "En puerta".
