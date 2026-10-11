@@ -87,6 +87,15 @@ p{margin:0;line-height:1.5}
 .trow{display:grid;grid-template-columns:minmax(0,1fr) 76px 76px 32px;gap:6px;align-items:center}
 .trow .input{min-height:48px;font-size:15px;padding:0 10px}
 .tipo{padding:10px;display:grid;gap:8px}
+.ent{padding:14px;display:grid;gap:12px}
+.ent .chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.ent .chk input{width:22px;height:22px;accent-color:var(--green);flex:none}
+.etp{display:grid;gap:8px}
+.etp.multi{padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.etn{font:700 14px "Space Mono",monospace;white-space:nowrap}
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ent .input{min-height:48px;font-size:15px}
+.eres{background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:8px 10px;line-height:1.45}
 .tipo .chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
 .tipo .chk input,.chkx{width:22px;height:22px;accent-color:var(--green);flex:none}
 .tipo .field .input{min-height:46px;font-size:15px}
@@ -841,10 +850,21 @@ async function viewVenta() {
 
 /* Nuevo evento (admin) */
 function viewNuevoEvento() {
-  const fila = (n = "", ph = "General", p = "", sigue = false, puerta = false) => `<div class="box tipo"><div class="trow"><input class="input" data-f="nombre" placeholder="${ph}" value="${n}"><input class="input" data-f="precio" inputmode="decimal" placeholder="$" value="${p}"><input class="input" data-f="cupo" inputmode="numeric" placeholder="Cupo"><button type="button" class="link" data-del aria-label="Quitar">✕</button></div>
-    <label class="field">Se vende hasta (opcional)<input class="input" data-f="hasta" type="datetime-local"></label>
-    <label class="chk"><input type="checkbox" data-f="sigue" ${sigue ? "checked" : ""}>Es la etapa siguiente del de arriba</label>
-    <label class="chk"><input type="checkbox" data-f="puerta" ${puerta ? "checked" : ""}>Solo se vende en puerta</label></div>`;
+  const etapa = () => `<div class="etp">
+      <div class="row" style="gap:8px"><span class="etn"></span><input class="input grow" data-f="enom" placeholder="Nombre (opcional) · Preventa" style="min-height:42px;font-size:14px"><button type="button" class="link" data-dele aria-label="Quitar precio">✕</button></div>
+      <div class="egrid">
+        <label class="field">Precio<input class="input" data-f="precio" inputmode="decimal" placeholder="$10"></label>
+        <label class="field">Cupo<input class="input" data-f="cupo" inputmode="numeric" placeholder="Sin límite"></label>
+      </div>
+      <label class="field">Se vende hasta<input class="input" data-f="hasta" type="datetime-local"><span class="small muted" style="text-transform:none;letter-spacing:0">Vacío = hasta el día del evento</span></label>
+    </div>`;
+  const entrada = (n = "") => `<div class="box ent">
+    <div class="row" style="gap:8px"><label class="field grow">Entrada<input class="input" data-f="nombre" placeholder="General, VIP, Mesa…" value="${esc(n)}"></label><button type="button" class="link" data-del style="align-self:end;padding-bottom:16px">Quitar</button></div>
+    <div class="stack etps" style="gap:10px">${etapa()}</div>
+    <p class="small muted eres" style="margin:0"></p>
+    <button type="button" class="btn btn-paper btn-sm" data-adde style="width:100%">+ Agregar otro precio (preventa, etc.)</button>
+    <label class="chk"><input type="checkbox" data-f="puerta">Solo se vende en la puerta (no sale en la Agenda)</label>
+  </div>`;
   V().innerHTML = `<form class="pad stack" id="f">
     <button type="button" class="link" id="atras" style="justify-self:start">← Eventos</button>
     <h2 style="font-size:28px">Nuevo evento</h2>
@@ -856,33 +876,64 @@ function viewNuevoEvento() {
       <span class="small muted" style="text-transform:none;letter-spacing:0">Aparece en la agenda. Mejor vertical (4:5).</span>
     </div>
     <label class="field">Datos para transferir<textarea class="input" name="pago" rows="5" required placeholder="Banco, tipo y n.º de cuenta, titular, cédula">${esc(localStorage.getItem("bc_pago") || "")}</textarea></label>
-    <span class="kick">Tipos de entrada</span>
-    <div class="trow small muted" style="margin-bottom:-8px"><span>Nombre</span><span>Precio</span><span>Cupo</span><span></span></div>
-    <div id="tipos" class="stack" style="gap:8px">${fila("", "General")}${fila("", "VIP")}</div>
-    <div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-paper btn-sm grow" id="add">+ Agregar tipo</button><button type="button" class="btn btn-paper btn-sm grow" id="etapas">+ Etapas de precio</button></div>
-    <span class="small muted">Cupo vacío = sin límite. Etapas: cada una se cierra al agotar su cupo o al llegar su fecha (lo que pase primero) y se abre la siguiente.</span>
+    <span class="kick">Entradas</span>
+    <span class="small muted" style="margin-top:-6px">Crea una entrada por cada tipo (General, VIP…). Si una entrada sube de precio con el tiempo, agrégale otro precio: el cliente solo ve el que está vigente.</span>
+    <div id="tipos" class="stack" style="gap:12px">${entrada("General")}</div>
+    <button type="button" class="btn btn-paper" id="add">+ Agregar otra entrada (VIP, Mesa…)</button>
     <div id="e"></div>
     <button class="btn btn-wood" id="ok">Crear evento</button>
   </form>`;
   const T = document.getElementById("tipos");
-  const bindDel = () => T.querySelectorAll("[data-del]").forEach(b => b.onclick = () => b.closest(".tipo").remove());
-  bindDel();
-  document.getElementById("add").onclick = () => { T.insertAdjacentHTML("beforeend", fila("", "Tipo")); bindDel(); };
-  document.getElementById("etapas").onclick = () => {
-    if ([...T.querySelectorAll('[data-f="nombre"]')].every(i => !i.value.trim())) T.innerHTML = "";
-    T.insertAdjacentHTML("beforeend", fila("General · Preventa", "", "10") + fila("General · Segunda etapa", "", "15", true) + fila("General · Día del evento", "", "20", true));
-    bindDel();
+  const fd = s => new Date(s).toLocaleString("es-EC", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const refrescar = () => {
+    T.querySelectorAll(".ent").forEach(c => {
+      const es = [...c.querySelectorAll(".etp")], varios = es.length > 1;
+      c.querySelector("[data-del]").hidden = T.querySelectorAll(".ent").length < 2;
+      es.forEach((x, i) => {
+        x.querySelector(".etn").textContent = varios ? `Precio ${i + 1}` : "Precio";
+        x.querySelector('[data-f="enom"]').hidden = !varios;
+        x.querySelector("[data-dele]").hidden = !varios;
+        x.classList.toggle("multi", varios);
+      });
+      const r = c.querySelector(".eres");
+      if (!varios) { r.textContent = ""; r.hidden = true; return; }
+      r.hidden = false;
+      r.textContent = es.map((x, i) => { const v = k => x.querySelector(`[data-f="${k}"]`).value.trim(); const p = v("precio") ? "$" + v("precio").replace(/^\$/, "") : `Precio ${i + 1}`;
+        if (i === es.length - 1) return `luego ${p} hasta el evento`;
+        const fin = [v("cupo") ? `se vendan ${v("cupo")}` : "", v("hasta") ? `llegue el ${fd(v("hasta"))}` : ""].filter(Boolean).join(" o ");
+        return (i === 0 ? "Se vende primero a " : "luego ") + p + (fin ? ` hasta que ${fin}` : " (ponle cupo o fecha para que cambie)");
+      }).join("; ") + ".";
+    });
   };
+  T.addEventListener("input", refrescar);
+  T.addEventListener("click", ev => {
+    const t = ev.target;
+    if (t.matches("[data-del]")) t.closest(".ent").remove();
+    else if (t.matches("[data-dele]")) t.closest(".etp").remove();
+    else if (t.matches("[data-adde]")) t.closest(".ent").querySelector(".etps").insertAdjacentHTML("beforeend", etapa());
+    else return;
+    refrescar();
+  });
+  refrescar();
+  document.getElementById("add").onclick = () => { T.insertAdjacentHTML("beforeend", entrada("")); refrescar(); T.lastElementChild.querySelector('[data-f="nombre"]').focus(); };
   document.getElementById("atras").onclick = viewEventos;
   const ff = document.getElementById("ffile");
   ff.onchange = () => { const f = ff.files[0], p = document.getElementById("fprev"); if (!f) return; p.src = URL.createObjectURL(f); p.hidden = false; };
   document.getElementById("f").onsubmit = async ev => {
     ev.preventDefault();
     const f = ev.target, b = document.getElementById("ok"), e = document.getElementById("e");
-    const tipos = [...T.querySelectorAll(".tipo")].map(r => { const v = k => r.querySelector(`[data-f="${k}"]`); return { nombre: v("nombre").value.trim(), precio: parseFloat(v("precio").value.replace(",", ".")), cupo: v("cupo").value.trim(), hasta: v("hasta").value ? new Date(v("hasta").value).toISOString() : "", sigue: v("sigue").checked, solo_puerta: v("puerta").checked }; }).filter(t => t.nombre && !isNaN(t.precio));
-    let gid = 0;
-    tipos.forEach((t, i) => { if (t.sigue && i > 0) { const a = tipos[i - 1]; if (a.grupo == null) a.grupo = ++gid; t.grupo = a.grupo; } delete t.sigue; });
-    if (!tipos.length) { e.innerHTML = `<div class="err">Agrega al menos un tipo con nombre y precio.</div>`; return; }
+    const tipos = [];
+    let falta = "";
+    [...T.querySelectorAll(".ent")].forEach((c, gi) => {
+      const nom = c.querySelector('[data-f="nombre"]').value.trim(), puerta = c.querySelector('[data-f="puerta"]').checked;
+      const es = [...c.querySelectorAll(".etp")].map(x => { const v = k => x.querySelector(`[data-f="${k}"]`).value.trim(); return { enom: v("enom"), precio: parseFloat(v("precio").replace("$", "").replace(",", ".")), cupo: v("cupo"), hasta: v("hasta") ? new Date(v("hasta")).toISOString() : "" }; }).filter(x => !isNaN(x.precio));
+      if (!nom && !es.length) return;
+      if (!nom) { falta = "Ponle nombre a cada entrada."; return; }
+      if (!es.length) { falta = `Ponle precio a la entrada ${nom}.`; return; }
+      es.forEach((x, i) => tipos.push({ nombre: es.length > 1 ? `${nom} · ${x.enom || "Precio " + (i + 1)}` : nom, precio: x.precio, cupo: x.cupo, hasta: x.hasta, solo_puerta: puerta, ...(es.length > 1 ? { grupo: gi + 1 } : {}) }));
+    });
+    if (falta) { e.innerHTML = `<div class="err">${esc(falta)}</div>`; return; }
+    if (!tipos.length) { e.innerHTML = `<div class="err">Agrega al menos una entrada con nombre y precio.</div>`; return; }
     b.disabled = true; e.innerHTML = "";
     let foto = null;
     if (ff.files[0]) {
