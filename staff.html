@@ -180,7 +180,7 @@ function shell() {
     sumar: ["Sumar puntos", "Cuando un socio paga su cuenta. Escanea el QR de su tarjeta y escribe el total."],
     canjear: ["Entregar un premio", "Cuando el cliente te muestra un código de 6 números en su celular."],
     eventos: ["Eventos", "Confirmar transferencias de entradas y escanear en la puerta."],
-    panel: ["Resumen del club", "Cuántos socios hay, quién no ha vuelto, últimos movimientos y tu equipo."]
+    panel: ["Resumen del club", "Cuántos socios hay, quién no ha vuelto, últimos movimientos, horario del local y tu equipo."]
   };
   app.innerHTML = `
   <div class="topbar"><span class="grow">Hola, ${esc(yo.nombre)}</span><button id="out">Salir</button></div>
@@ -365,9 +365,46 @@ async function viewPanel() {
     </div>
     <button class="btn btn-paper" id="rf">Actualizar</button>
   </section>
+  <section class="pad stack" style="padding-top:6px" id="horario"><span class="kick">Horario y agenda</span><div class="spin" style="margin:20px auto"></div></section>
   <section class="pad stack" style="padding-top:6px" id="equipo"><span class="kick">Equipo</span><div class="spin" style="margin:20px auto"></div></section>`;
   document.getElementById("rf").onclick = viewPanel;
+  pintarHorario();
   pintarEquipo();
+}
+
+async function pintarHorario() {
+  const el = document.getElementById("horario"); if (!el) return;
+  const { data: l, error } = await sb.rpc("local_publico");
+  if (error || !l) { el.innerHTML = `<span class="kick">Horario y agenda</span><div class="err">${esc(error ? errMsg(error) : "Falta correr horario.sql en Supabase.")}</div>`; return; }
+  const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  const orden = [1, 2, 3, 4, 5, 6, 0];
+  el.innerHTML = `<span class="kick">Horario y agenda</span>
+    <span class="small muted">Lo que pongas aquí se ve en la página de inicio, en el cuadro "Abierto ahora". Las fechas de la semana se calculan solas.</span>
+    <form class="stack" id="hf" style="gap:10px">
+      ${orden.map(i => { const x = l.dias[i] || {}; return `<div class="box ped hd" data-i="${i}" style="gap:8px">
+        <label class="row" style="justify-content:space-between"><strong style="font-family:'Space Mono';font-size:16px">${DIAS[i]}</strong><span class="row small" style="gap:6px"><input type="checkbox" data-f="abierto" ${x.abierto ? "checked" : ""} style="width:22px;height:22px"> Abre</span></label>
+        <div class="hrs row" style="gap:8px;${x.abierto ? "" : "display:none"}"><label class="field grow">Desde<input class="input" type="time" data-f="abre" value="${esc(x.abre || "17:00")}"></label><label class="field grow">Hasta<input class="input" type="time" data-f="cierra" value="${esc(x.cierra || "00:00")}"></label></div>
+        <label class="field">${x.abierto ? "Qué hay ese día" : "Mensaje (día cerrado)"}<input class="input" data-f="que" maxlength="80" value="${esc(x.que || "")}" placeholder="Promoción de alitas"></label>
+      </div>`; }).join("")}
+      <label class="field">Línea bajo la agenda<input class="input" name="nota" maxlength="140" value="${esc(l.nota || "")}" placeholder="Horario de atención 5:00pm–12:00am · Lunes cerrado"></label>
+      <label class="field">Aviso especial (opcional)<input class="input" name="aviso" maxlength="140" value="${esc(l.aviso || "")}" placeholder="Hoy cerramos a las 10pm"><span class="small muted">Sale destacado arriba del horario. Bórralo cuando ya no aplique.</span></label>
+      <div id="he"></div>
+      <button class="btn btn-wood">Guardar horario</button>
+    </form>`;
+  el.querySelectorAll(".hd").forEach(c => c.querySelector('[data-f="abierto"]').onchange = e => {
+    c.querySelector(".hrs").style.display = e.target.checked ? "" : "none";
+    c.querySelector('[data-f="que"]').parentElement.firstChild.textContent = e.target.checked ? "Qué hay ese día" : "Mensaje (día cerrado)";
+  });
+  document.getElementById("hf").onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, b = f.querySelector(".btn"), e = document.getElementById("he"); b.disabled = true; e.innerHTML = "";
+    const dias = l.dias.slice();
+    el.querySelectorAll(".hd").forEach(c => { const i = +c.dataset.i, v = k => c.querySelector(`[data-f="${k}"]`); dias[i] = { ...dias[i], abierto: v("abierto").checked, abre: v("abre").value || "17:00", cierra: v("cierra").value || "00:00", que: v("que").value.trim() }; });
+    const { error } = await sb.rpc("guardar_local", { p_dias: dias, p_nota: f.nota.value, p_aviso: f.aviso.value });
+    b.disabled = false;
+    e.innerHTML = error ? `<div class="err">${esc(errMsg(error))}</div>` : `<div class="ok"><span class="kick">Guardado</span><span>Ya se ve en la página de inicio.</span></div>`;
+    if (!error) l.dias = dias;
+  };
 }
 
 async function pintarEquipo() {
