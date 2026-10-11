@@ -247,20 +247,20 @@ function viewIntro() {
     <p style="font-size:16px;max-width:30ch">Cada visita suma. Muestra tu QR al pagar y canjea tus puntos por cerveza, alitas y picadas.</p>
     ${ref ? `<p class="small" style="background:var(--amber);border:1px solid var(--ink);padding:8px 10px">Te invitó un amigo · código ${esc(ref.toUpperCase())}</p>` : ""}
     <div class="stack" style="gap:12px;margin-top:4px">
-      <button class="btn btn-wood" id="go-reg">Únete gratis · +50 pts</button>
+      <button class="btn btn-wood" id="go-reg">Únete gratis · +2 pts</button>
       <button class="link" id="go-in" style="justify-self:start">Ya soy socio, entrar</button>
     </div>
   </section>
   <div class="zig down"></div>
   <div class="dark fx-outline" aria-hidden="true">
-    <div>Beer Club · 10 pts x $1 · Beer Club · 10 pts x $1 ·&nbsp;</div>
+    <div>Beer Club · 2 pts x $10 · Beer Club · 2 pts x $10 ·&nbsp;</div>
     <div>Jarras gratis · Alitas · Jarras gratis · Alitas ·&nbsp;</div>
-    <div>Espuma · Lúpulo · Barril · Espuma · Lúpulo · Barril ·&nbsp;</div>
+    <div>Premios · Socios · Premios · Socios · Premios ·&nbsp;</div>
   </div>
   <section class="dark pad stack" style="gap:16px;padding-top:6px">
     <span class="kick">Cómo funciona</span>
     <div class="step"><b>1</b><div><strong>Regístrate con tu celular</strong><span>Nombre, número y un PIN de 4 dígitos. Sin apps.</span></div></div>
-    <div class="step"><b>2</b><div><strong>Muestra tu QR al pagar</strong><span>10 puntos por cada $1 de consumo.</span></div></div>
+    <div class="step"><b>2</b><div><strong>Muestra tu QR al pagar</strong><span>2 puntos por cada $10 de consumo.</span></div></div>
     <div class="step"><b>3</b><div><strong>Canjea cuando quieras</strong><span>Elige tu premio y muéstrale el código al mesero.</span></div></div>
   </section>
   <div class="zig"></div>
@@ -273,7 +273,7 @@ function viewIntro() {
       <span style="font-family:'Space Mono';font-weight:700;font-size:34px;line-height:1;color:var(--amber)"><span id="cnt">50</span> pts</span>
     </div>
     <div class="ruta" id="ruta"><i class="fill" id="fill"></i><div class="muted small">Cargando…</div></div>
-    <p class="small muted">Empiezas con 50 pts de regalo. Si vienes seguido sumas más rápido: ×1.25 desde 500 pts y ×1.5 desde 1500.</p>
+    <p class="small muted">Empiezas con 2 pts de regalo. Por cada $10 de consumo sumas 2 pts.</p>
   </section>`;
   document.getElementById("go-reg").onclick = viewRegistro;
   document.getElementById("go-in").onclick = viewEntrar;
@@ -285,7 +285,7 @@ function viewIntro() {
     el.innerHTML = `<i class="fill" id="fill"></i>` + recompensas.map(r => `
       <div class="box stop" data-p="${r.costo_puntos}"><span class="dot"></span>
         <div><strong style="font-family:'Space Mono';font-size:24px;line-height:1;display:block">${r.costo_puntos} pts</strong>
-        <span style="font-size:15px">${esc(r.nombre)}</span><span class="small muted" style="display:block;margin-top:2px">≈ $${Math.ceil((r.costo_puntos - 50) / 10)} de consumo</span></div>
+        <span style="font-size:15px">${esc(r.nombre)}</span><span class="small muted" style="display:block;margin-top:2px">≈ $${Math.max(0, Math.ceil((r.costo_puntos - 2) * 5))} de consumo</span></div>
         <span class="stamp">¡Reclámala!</span></div>`).join("");
     animarRuta();
   });
@@ -359,7 +359,7 @@ function viewBienvenida(nombre) {
   <section class="pad stack fx-arc" style="padding-top:48px;gap:18px;position:relative">
     <div class="fx-badge" style="position:absolute;right:22px;top:30px">Socio<br>nuevo</div>
     <span class="kick">Listo, ${esc(nombre)}</span>
-    <h1 class="rise" style="font-size:clamp(44px,13vw,58px);line-height:.9">+50 pts<br>de regalo</h1>
+    <h1 class="rise" style="font-size:clamp(44px,13vw,58px);line-height:.9">+2 pts<br>de regalo</h1>
     <p style="font-size:15px">Guarda tu tarjeta en WhatsApp: se abre un chat con nosotros con el enlace ya escrito. Solo dale enviar y siempre la tendrás a mano.</p>
     <a class="btn btn-grass" href="${wa(TEL_LOCAL, msg)}" target="_blank" rel="noopener">Guardar en WhatsApp</a>
     <button class="btn btn-paper" id="ver">Ver mi tarjeta</button>
@@ -409,21 +409,18 @@ async function viewTarjeta() {
 }
 
 function paintTarjeta() {
-  const d = data, i = NIVELES.findIndex(n => n.id === d.nivel), niv = NIVELES[i], next = NIVELES[i + 1];
-  const pct = next ? Math.min(100, Math.round((d.acumulado - niv.desde) / (next.desde - niv.desde) * 100)) : 100;
+  const d = data;
   const qr = qrcode(0, "M"); qr.addData(d.qr); qr.make();
-  const invita = `Únete al Beer Club de Ficoa Beer Garden y gana 50 pts de bienvenida 🍺 ${baseUrl}?ref=${d.codigo_amigo}`;
+  const invita = `Únete al Beer Club de Ficoa Beer Garden y gana 2 pts de bienvenida 🍺 ${baseUrl}?ref=${d.codigo_amigo}`;
   const fecha = s => new Date(s).toLocaleDateString("es-EC", { day: "numeric", month: "short" });
   const etiqueta = m => m.nota || { compra: "Consumo", canje: "Canje", bono: "Bono", ajuste: "Ajuste", vencimiento: "Vencimiento" }[m.tipo];
   app.innerHTML = `
   <div class="topbar"><a href="index.html">← Beer Garden</a><button id="salir">Salir</button></div>
   <section class="dark card" style="position:relative">
-    <div class="row"><span class="kick grow">Socio · ${esc(d.nombre)}</span><span class="badge">${niv.nombre} ${niv.mult}</span></div>
+    <div class="row"><span class="kick grow">Socio · ${esc(d.nombre)}</span></div>
     <div><div class="pts" id="pts">${d.puntos}<small>pts</small></div></div>
-    ${next ? "" : `<div class="fx-badge" style="position:absolute;right:20px;top:58px;width:78px;height:78px;font-size:13px">Nivel<br>top</div>`}
     <div class="stack" style="gap:8px">
-      <div class="bar"><i style="width:${pct}%"></i></div>
-      <span class="small" style="opacity:.85">${next ? `Te faltan ${next.desde - d.acumulado} pts acumulados para ${next.nombre}` : "Nivel máximo. Salud."}</span>
+      <span class="small" style="opacity:.85">Por cada $10 de consumo sumas 2 pts.</span>
     </div>
   </section>
   <div class="zig" style="margin-bottom:22px"></div>
@@ -500,12 +497,10 @@ function startPoll() {
     try {
       const d = await fetchTarjeta(); if (!d) return;
       const diff = d.puntos - data.puntos;
-      if (diff === 0 && d.nivel === data.nivel) return;
-      const subio = d.nivel !== data.nivel;
+      if (diff === 0) return;
       data = d; paintTarjeta();
       if (diff > 0) { toast(`+${diff} pts 🍺`); const el = document.getElementById("pts"); if (el) el.classList.add("bump"); }
       if (diff < 0 && canje) { closeCanje(true); toast("¡Salud! Canje listo"); }
-      if (subio && diff > 0) setTimeout(() => toast(`Nivel ${NIVELES.find(n => n.id === d.nivel).nombre}`), 3600);
       if (canje) paintCanje();
     } catch (_) {}
   }, 4000);

@@ -120,8 +120,6 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 const app = document.getElementById("app");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const errMsg = e => (e && e.message ? e.message : "Algo salió mal. Intenta otra vez.");
-const NIV = { espuma: "Espuma ×1", lupulo: "Lúpulo ×1.25", barril: "Barril ×1.5" };
-const MULT = { espuma: 1, lupulo: 1.25, barril: 1.5 };
 let yo = null, tab = "sumar", scanner = null, sel = null, monto = "";
 
 /* ─── Login ─── */
@@ -231,11 +229,11 @@ async function buscar(qr) {
 }
 
 function viewMonto() {
-  const n = parseFloat(monto || "0"), pts = Math.floor(n * 10 * MULT[sel.nivel]);
+  const n = parseFloat(monto || "0"), pts = Math.floor(n * 0.2);
   V().innerHTML = `
   <section class="pad stack">
     <div class="box row" style="padding:14px 16px">
-      <div class="grow"><strong style="font-family:'Space Mono';font-size:20px;display:block">${esc(sel.nombre)}</strong><span class="small muted">${NIV[sel.nivel]} · ${sel.puntos} pts</span></div>
+      <div class="grow"><strong style="font-family:'Space Mono';font-size:20px;display:block">${esc(sel.nombre)}</strong><span class="small muted">${sel.puntos} pts</span></div>
       <button class="link" id="otro">Cambiar</button>
     </div>
     <span class="kick">Paso 2 de 2 · Escribe el total de la cuenta</span>
@@ -259,7 +257,7 @@ function viewMonto() {
     if (error) { b.disabled = false; document.getElementById("e").innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; return; }
     V().innerHTML = `
     <section class="pad stack" style="padding-top:34px">
-      <div class="ok"><span class="kick">Listo</span><span class="big">+${r.puntos_sumados} pts</span><span>${esc(r.cliente)} · saldo ${r.saldo} pts · ${NIV[r.nivel]}</span></div>
+      <div class="ok"><span class="kick">Listo</span><span class="big">+${r.puntos_sumados} pts</span><span>${esc(r.cliente)} · saldo ${r.saldo} pts</span></div>
       <p class="small muted">El cliente ya lo ve en su tarjeta.</p>
       <button class="btn btn-wood" id="sig">Siguiente cliente</button>
     </section>`;
@@ -303,7 +301,7 @@ async function viewPremios() {
     <label class="field">Premio<input class="input" name="n" required minlength="2" value="${r ? esc(r.nombre) : ""}" placeholder="Ej: Jarra de barril"></label>
     <div class="row" style="align-items:flex-end">
       <label class="field grow">Cuesta (puntos)<input class="input" name="p" required inputmode="numeric" pattern="\\d+" value="${r ? r.costo_puntos : ""}" placeholder="150"></label>
-      <span class="small muted" style="padding-bottom:16px;white-space:nowrap" data-eq>${r ? "≈ $" + Math.ceil(r.costo_puntos / 10) : ""}</span>
+      <span class="small muted" style="padding-bottom:16px;white-space:nowrap" data-eq>${r ? "≈ $" + Math.ceil(r.costo_puntos * 5) : ""}</span>
     </div>
     <label class="check" style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" name="a" style="width:20px;height:20px;accent-color:var(--green)" ${!r || r.activa ? "checked" : ""}>Visible para los clientes</label>
     <div data-e></div>
@@ -312,14 +310,14 @@ async function viewPremios() {
   V().innerHTML = `<section class="pad stack">
     <button class="link" id="atras" style="justify-self:start">← Volver a canjear</button>
     <h2 style="font-size:26px">Premios</h2>
-    <p class="small muted">Cada $1 de consumo da 10 puntos. Si ocultas un premio, deja de aparecer en la tarjeta de los clientes.</p>
+    <p class="small muted">Cada $10 de consumo dan 2 puntos. Si ocultas un premio, deja de aparecer en la tarjeta de los clientes.</p>
     ${rs.map(card).join("")}
     <span class="kick" style="margin-top:10px">Nuevo premio</span>
     ${card(null)}
   </section>`;
   document.getElementById("atras").onclick = viewCanjear;
   V().querySelectorAll("form[data-id]").forEach(f => {
-    f.p.oninput = () => { const v = parseInt(f.p.value); f.querySelector("[data-eq]").textContent = v > 0 ? "≈ $" + Math.ceil(v / 10) : ""; };
+    f.p.oninput = () => { const v = parseInt(f.p.value); f.querySelector("[data-eq]").textContent = v > 0 ? "≈ $" + Math.ceil(v * 5) : ""; };
     f.onsubmit = async ev => {
       ev.preventDefault();
       const b = f.querySelector("button"), e = f.querySelector("[data-e]"); b.disabled = true; e.innerHTML = "";
