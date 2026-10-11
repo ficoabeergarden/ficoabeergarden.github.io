@@ -322,6 +322,7 @@ async function viewComprar(slug) {
     <label class="field">Nombre<input class="input" name="nombre" required minlength="2" autocomplete="name" placeholder="Ana Pérez"></label>
     <label class="field">Celular (WhatsApp)<div class="tel"><span>+593</span><input class="input" name="tel" required inputmode="tel" autocomplete="tel-national" placeholder="099 123 4567"></div></label>
     <span class="small muted" style="margin-top:-6px">Si eres del Beer Club usa el mismo celular y sumas puntos.</span>`}
+    <label class="field">Cédula<input class="input" name="cedula" required inputmode="numeric" pattern="[0-9]{10}" maxlength="10" autocomplete="off" placeholder="10 números" title="La cédula debe tener 10 números"></label>
     <div class="box row" style="padding:14px 16px;margin-top:6px"><span class="grow small" style="letter-spacing:.14em;text-transform:uppercase">Total</span><strong id="tot" style="font-family:'Space Mono';font-size:28px">$0</strong></div>
     <div id="e"></div>
     <button class="btn btn-wood" id="ok" disabled>Reservar entradas</button>
@@ -345,7 +346,8 @@ async function viewComprar(slug) {
     const { data: tok, error } = await sb.rpc("comprar_entradas", {
       p_evento: ev.id, p_nombre: socio ? null : f.nombre.value, p_telefono: socio ? null : normTel(f.tel.value),
       p_items: Object.entries(cant).filter(([, q]) => q > 0).map(([tipo, cantidad]) => ({ tipo: +tipo, cantidad })),
-      p_token_club: socio ? club : null
+      p_token_club: socio ? club : null,
+      p_cedula: f.cedula.value.replace(/\D/g, "")
     });
     if (error) { e.innerHTML = `<div class="err">${esc(errMsg(error))}</div>`; upd(); return; }
     addPed(tok);

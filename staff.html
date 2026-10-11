@@ -552,15 +552,15 @@ async function viewPagos() {
   const { data: peds, error } = await sb.rpc("pedidos_evento", { p_evento: evSel.id });
   if (error) { S().innerHTML = `<div class="pad"><div class="err">${esRed(error) ? "Sin conexión. Los pagos se confirman con internet; la puerta funciona sin él." : esc(errMsg(error))}</div></div>`; return; }
   const pend = peds.filter(p => p.estado === "pendiente"), pag = peds.filter(p => p.estado === "pagado");
-  const key = p => esc((p.nombre + " " + p.ref + " " + p.telefono).toLowerCase());
+  const key = p => esc((p.nombre + " " + p.ref + " " + p.telefono + " " + (p.cedula || "")).toLowerCase());
   const link = `${AGENDA}?e=${evSel.slug}`;
   S().innerHTML = `<section class="pad stack" style="padding-top:6px">
     ${aviso}
     <div class="box row" style="padding:10px 14px"><span class="grow small" style="word-break:break-all">${esc(link)}</span><a class="btn btn-grass btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("Entradas para " + evSel.nombre + " 🍺 " + link)}">Compartir</a></div>
-    <input class="input" id="q" placeholder="Buscar nombre, referencia o celular" autocomplete="off">
+    <input class="input" id="q" placeholder="Buscar nombre, referencia, celular o cédula" autocomplete="off">
     <span class="kick">Por confirmar · ${pend.length}</span>
     ${pend.map(p => `<div class="box ped" data-k="${key(p)}">
-      <div class="row"><div class="grow"><strong style="font-family:'Space Mono';font-size:17px;display:block">${esc(p.nombre)}</strong><span class="small muted">+${esc(p.telefono)}${p.socio ? " · socio" : ""} · ${fH(p.creado_en)}</span></div><span class="ref">${esc(p.ref)}</span></div>
+      <div class="row"><div class="grow"><strong style="font-family:'Space Mono';font-size:17px;display:block">${esc(p.nombre)}</strong><span class="small muted">+${esc(p.telefono)}${p.cedula ? " · CI " + esc(p.cedula) : ""}${p.socio ? " · socio" : ""} · ${fH(p.creado_en)}</span></div><span class="ref">${esc(p.ref)}</span></div>
       <div class="row"><span class="grow small">${esc(resumen(p.entradas))}</span><strong style="font-family:'Space Mono';font-size:22px">${money(p.total)}</strong></div>
       <div class="row"><button class="btn btn-wood btn-sm grow" data-ok="${p.id}">Confirmar pago</button><button class="link" data-x="${p.id}">Anular</button></div>
     </div>`).join("") || `<p class="small muted">Nada pendiente.</p>`}
@@ -618,9 +618,9 @@ function exportarLista(peds) {
   const q = v => { v = v == null ? "" : String(v); return /[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
   const f = d => d ? new Date(d).toLocaleString("es") : "";
   const EP = { pendiente: "Por confirmar", pagado: "Pagado", anulado: "Anulado" }, EE = { usada: "Entró", anulada: "Anulada" };
-  const rows = [["Referencia", "Nombre", "Celular", "Socio Beer Club", "Pago", "Fecha de compra", "Total pedido", "Venta", "Método", "Entrada", "Tipo", "Estado entrada", "Hora de ingreso"]];
+  const rows = [["Referencia", "Nombre", "Cédula", "Celular", "Socio Beer Club", "Pago", "Fecha de compra", "Total pedido", "Venta", "Método", "Entrada", "Tipo", "Estado entrada", "Hora de ingreso"]];
   peds.forEach(p => (p.entradas && p.entradas.length ? p.entradas : [{}]).forEach(x => rows.push([
-    p.ref, p.nombre, "+" + p.telefono, p.socio ? "Sí" : "No", EP[p.estado] || p.estado, f(p.creado_en), p.total, p.canal === "puerta" ? "En puerta" : "Online", p.metodo || (p.canal === "puerta" ? "" : "Transferencia"),
+    p.ref, p.nombre, p.cedula ? "\t" + p.cedula : "", p.telefono ? "+" + p.telefono : "", p.socio ? "Sí" : "No", EP[p.estado] || p.estado, f(p.creado_en), p.total, p.canal === "puerta" ? "En puerta" : "Online", p.metodo || (p.canal === "puerta" ? "" : "Transferencia"),
     x.n ? `${x.n} de ${p.entradas.length}` : "", x.tipo || "", x.estado ? (EE[x.estado] || (p.estado === "pagado" ? "Sin usar" : "—")) : "", f(x.usado_en)
   ])));
   const csv = "\ufeff" + rows.map(r => r.map(q).join(";")).join("\n");
