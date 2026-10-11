@@ -87,6 +87,11 @@ p{margin:0;line-height:1.5}
 .trow{display:grid;grid-template-columns:minmax(0,1fr) 76px 76px 32px;gap:6px;align-items:center}
 .trow .input{min-height:48px;font-size:15px;padding:0 10px}
 .tipo{padding:10px;display:grid;gap:8px}
+.psubs{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line);scrollbar-width:none}
+.psubs::-webkit-scrollbar{display:none}
+.psubs button{position:relative;flex:none;min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:999px;background:var(--paper);font:700 14px "Space Mono",monospace;color:var(--ink);cursor:pointer}
+.psubs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.pdot{position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:var(--amber)}
 .ent{padding:14px;display:grid;gap:12px}
 .ent .chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
 .ent .chk input{width:22px;height:22px;accent-color:var(--green);flex:none}
@@ -187,7 +192,7 @@ function shell() {
     sumar: ["Sumar puntos", "Cuando un socio paga su cuenta. Escanea el QR de su tarjeta y escribe el total."],
     canjear: ["Entregar un premio", "Cuando el cliente te muestra un código de 6 números en su celular."],
     eventos: ["Eventos", "Confirmar transferencias de entradas y escanear en la puerta."],
-    panel: ["Resumen del club", "Cuántos socios hay, quién no ha vuelto, últimos movimientos, horario del local y tu equipo."]
+    panel: ["Resumen", "Elige una sección: Club, Horario, Equipo o Comprobantes."]
   };
   app.innerHTML = `
   <div class="topbar"><span class="grow">Hola, ${esc(yo.nombre)}</span><button id="out">Salir</button></div>
@@ -339,16 +344,34 @@ async function viewPremios() {
 }
 
 /* ─── Panel (dueña) ─── */
-async function viewPanel() {
-  V().innerHTML = `<div class="spin"></div>`;
+let pSub = sessionStorage.getItem("bc_psub") || "club";
+function viewPanel() {
+  const SUBS = [["club", "Club", "Socios, quién no ha vuelto y últimos movimientos de puntos."], ["horario", "Horario", "Lo que se ve en la página de inicio: horario de cada día y avisos."], ["equipo", "Equipo", "Quién entra al panel: crear usuarios, claves y permisos."], ["fotos", "Comprobantes", "Espacio usado por las fotos de transferencias y borrado."]];
+  const cur = SUBS.find(s => s[0] === pSub) || SUBS[0];
+  V().innerHTML = `<div class="psubs" role="tablist">${SUBS.map(([k, l]) => `<button role="tab" data-ps="${k}" aria-selected="${k === cur[0]}">${l}${k === "fotos" ? `<i class="pdot" id="pdot" hidden></i>` : ""}</button>`).join("")}</div>
+  <p class="small muted" style="margin:0;padding:10px 20px 0">${cur[2]}</p>
+  <div id="psub"></div>`;
+  V().querySelectorAll("[data-ps]").forEach(b => b.onclick = () => { pSub = b.dataset.ps; sessionStorage.setItem("bc_psub", pSub); viewPanel(); });
+  const P = document.getElementById("psub");
+  if (cur[0] === "club") pintarClub();
+  else if (cur[0] === "horario") { P.innerHTML = `<section class="pad stack" id="horario"><div class="spin" style="margin:20px auto"></div></section>`; pintarHorario(); }
+  else if (cur[0] === "equipo") { P.innerHTML = `<section class="pad stack" id="actividad"><div class="spin" style="margin:20px auto"></div></section><section class="pad stack" id="equipo" style="padding-top:6px"><div class="spin" style="margin:20px auto"></div></section>`; pintarActividad(); pintarEquipo(); }
+  else { P.innerHTML = `<section class="pad stack" id="comprobantes"><div class="spin" style="margin:20px auto"></div></section>`; pintarComprobantes(); }
+  if (cur[0] !== "fotos") sb.rpc("comprobantes_uso").then(({ data: u }) => { const d = document.getElementById("pdot"); if (d && u && (u.viejos || u.mb >= 800)) d.hidden = false; });
+}
+
+async function pintarClub() {
+  const P = document.getElementById("psub"); if (!P) return;
+  P.innerHTML = `<div class="spin"></div>`;
   const [{ data: p, error }, { data: mov }] = await Promise.all([
     sb.rpc("panel_resumen"),
     sb.from("movimientos").select("tipo,puntos,monto_compra,nota,creado_en,clientes(nombre)").order("creado_en", { ascending: false }).limit(25)
   ]);
-  if (error) { V().innerHTML = `<div class="pad"><div class="err">${esc(errMsg(error))}</div></div>`; return; }
+  if (!document.getElementById("psub")) return;
+  if (error) { P.innerHTML = `<div class="pad"><div class="err">${esc(errMsg(error))}</div></div>`; return; }
   const f = s => new Date(s).toLocaleString("es-EC", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const dias = s => s ? Math.floor((Date.now() - new Date(s)) / 864e5) + " días" : "—";
-  V().innerHTML = `
+  P.innerHTML = `
   <section class="pad stack">
     <span class="kick">Resumen</span>
     <div class="stats">
@@ -371,14 +394,8 @@ async function viewPanel() {
       ${(mov || []).map(m => `<div><div class="grow"><strong style="display:block">${esc(m.clientes?.nombre)}</strong><span class="small muted">${f(m.creado_en)} · ${esc(m.nota || m.tipo)}${m.monto_compra ? " · $" + m.monto_compra : ""}</span></div><span class="${m.puntos >= 0 ? "plus" : "minus"}">${m.puntos >= 0 ? "+" : ""}${m.puntos}</span></div>`).join("") || `<div class="small muted">Aún no hay movimientos.</div>`}
     </div>
     <button class="btn btn-paper" id="rf">Actualizar</button>
-  </section>
-  <section class="pad stack" style="padding-top:6px" id="comprobantes"></section>
-  <section class="pad stack" style="padding-top:6px" id="horario"><span class="kick">Horario y agenda</span><div class="spin" style="margin:20px auto"></div></section>
-  <section class="pad stack" style="padding-top:6px" id="equipo"><span class="kick">Equipo</span><div class="spin" style="margin:20px auto"></div></section>`;
-  document.getElementById("rf").onclick = viewPanel;
-  pintarHorario();
-  pintarComprobantes();
-  pintarEquipo();
+  </section>`;
+  document.getElementById("rf").onclick = pintarClub;
 }
 
 async function pintarComprobantes() {
@@ -440,6 +457,28 @@ async function pintarHorario() {
     e.innerHTML = error ? `<div class="err">${esc(errMsg(error))}</div>` : `<div class="ok"><span class="kick">Guardado</span><span>Ya se ve en la página de inicio.</span></div>`;
     if (!error) l.dias = dias;
   };
+}
+
+let actPer = "hoy";
+async function pintarActividad() {
+  const el = document.getElementById("actividad"); if (!el) return;
+  const h = new Date(); h.setHours(0, 0, 0, 0);
+  const desde = { hoy: h, semana: new Date(h.getTime() - ((h.getDay() + 6) % 7) * 864e5), mes: new Date(h.getFullYear(), h.getMonth(), 1) }[actPer];
+  const { data: a, error } = await sb.rpc("actividad_equipo", { p_desde: desde.toISOString() });
+  if (!document.getElementById("actividad")) return;
+  if (error) { el.innerHTML = `<span class="kick">Actividad del equipo</span><div class="err">${esc(/actividad_equipo/.test(error.message) ? "Falta correr actividad-equipo.sql en Supabase." : errMsg(error))}</div>`; return; }
+  const max = Math.max(1, ...a.map(x => x.total));
+  const L = [["puntos", "puntos"], ["premios", "premios"], ["pagos", "pagos"], ["ventas", "ventas puerta"], ["escaneos", "escaneos"]];
+  const lista = a.filter(x => x.activo || x.total);
+  el.innerHTML = `<span class="kick">Actividad del equipo</span>
+    <div class="seg" role="tablist" style="grid-template-columns:repeat(3,1fr)">${[["hoy", "Hoy"], ["semana", "Semana"], ["mes", "Mes"]].map(([k, l]) => `<button type="button" role="tab" data-ap="${k}" aria-selected="${k === actPer}">${l}</button>`).join("")}</div>
+    <div class="box list" style="padding:4px 16px">${lista.map((x, i) => `<div style="display:grid;gap:6px;padding:12px 0">
+      <div class="row"><strong class="grow" style="font-family:'Space Mono';font-size:16px">${i === 0 && x.total ? "★ " : ""}${esc(x.nombre)}</strong><strong style="font-family:'Space Mono';font-size:20px">${x.total}</strong></div>
+      <div style="height:8px;border-radius:99px;background:var(--line);overflow:hidden"><i style="display:block;height:100%;width:${Math.round(x.total / max * 100)}%;background:var(--green)"></i></div>
+      <span class="small muted">${L.filter(([k]) => x[k]).map(([k, l]) => `${x[k]} ${l}`).join(" · ") || "Sin actividad"}</span>
+    </div>`).join("") || `<div class="small muted" style="padding:12px 0">Aún no hay equipo.</div>`}</div>
+    <span class="small muted">Cuenta cada acción: sumar puntos, entregar un premio, confirmar un pago, vender en puerta y escanear una entrada.</span>`;
+  el.querySelectorAll("[data-ap]").forEach(b => b.onclick = () => { actPer = b.dataset.ap; pintarActividad(); });
 }
 
 async function pintarEquipo() {
