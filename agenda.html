@@ -385,10 +385,12 @@ function paintPedido(p, off, tok) {
       <span class="kick">1 · Transfiere ${money(p.total)}</span>
       <div class="box pago">${esc(ev.datos_pago)}</div>
       <div class="box row" style="padding:12px 16px"><span class="grow small">Pon esta referencia en el concepto</span><strong style="font-family:'Space Mono';font-size:24px;letter-spacing:.12em">${esc(p.ref)}</strong></div>
-      <span class="kick" style="margin-top:8px">2 · Envíanos el comprobante</span>
-      <a class="btn btn-grass" href="${wa(TEL_LOCAL, msg)}" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
+      <span class="kick" style="margin-top:8px">2 · Sube el comprobante</span>
+      <div id="cmp" class="stack" style="gap:10px"><div class="spin" style="margin:10px auto"></div></div>
+      <a class="link" style="justify-self:start" href="${wa(TEL_LOCAL, msg)}" target="_blank" rel="noopener">O envíalo por WhatsApp</a>
       <p class="small muted">Cuando confirmemos la transferencia tus entradas aparecen aquí con su QR. Esta página se actualiza sola.</p>
     </section>`;
+    pintarComprobante(tok);
     return;
   }
   if (p.estado === "anulado") {
@@ -403,6 +405,59 @@ function paintPedido(p, off, tok) {
     <p class="small muted">Cada QR sirve una sola vez. Puedes mandarle a cada amigo su entrada con "Enviar a un amigo".</p>
     <p class="small muted">Abre esta página una vez antes del evento y tus entradas se verán aunque no tengas internet en la puerta.</p>
   </section>`;
+}
+
+async function comprimir(file) {
+  try {
+    const img = await createImageBitmap(file), k = Math.min(1, 1400 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(r, "image/jpeg", .8));
+  } catch (_) { return file; }
+}
+
+async function pintarComprobante(tok, cambiar) {
+  const el = document.getElementById("cmp"); if (!el) return;
+  let st = null;
+  if (!cambiar) { try { st = (await sb.rpc("mi_comprobante", { p_token: tok })).data; } catch (_) {} }
+  if (!document.getElementById("cmp")) return;
+  if (st && (st.foto || st.nota)) {
+    el.innerHTML = `<div class="box" style="padding:14px 16px;display:grid;gap:4px;border-color:var(--green)"><strong style="font-family:'Space Mono';font-size:17px;color:var(--green)">✓ Comprobante recibido</strong><span class="small">${st.foto ? "Recibimos tu foto." : "Recibimos: " + esc(st.nota)} Lo estamos revisando.</span></div>
+      <button class="link" id="cmb" style="justify-self:start">Cambiar comprobante</button>`;
+    document.getElementById("cmb").onclick = () => pintarComprobante(tok, true);
+    return;
+  }
+  el.innerHTML = `
+    <label class="btn btn-grass" style="cursor:pointer"><input type="file" accept="image/*" id="cf" hidden>Subir foto del comprobante</label>
+    <span class="small muted" style="margin-top:-4px">Toma una captura de pantalla en tu app del banco y súbela aquí.</span>
+    <details><summary class="link" style="display:inline-block">¿No tienes la captura?</summary>
+      <form id="cn" class="stack" style="gap:10px;margin-top:10px">
+        <label class="field">Banco y número de comprobante<input class="input" name="nota" required minlength="4" maxlength="160" placeholder="Pichincha · 123456789"></label>
+        <button class="btn btn-paper">Ya transferí</button>
+      </form>
+    </details>
+    <div id="ce"></div>`;
+  const err = m => document.getElementById("ce").innerHTML = `<div class="err">${esc(m)}</div>`;
+  document.getElementById("cf").onchange = async ev => {
+    const file = ev.target.files[0]; if (!file) return;
+    const lb = el.querySelector("label.btn"); lb.style.pointerEvents = "none"; lb.lastChild.textContent = "Subiendo…";
+    try {
+      const blob = await comprimir(file), path = tok + "/" + Date.now() + ".jpg";
+      const up = await sb.storage.from("comprobantes").upload(path, blob, { contentType: blob.type || "image/jpeg" });
+      if (up.error) throw up.error;
+      const { error } = await sb.rpc("enviar_comprobante", { p_token: tok, p_path: path, p_nota: null });
+      if (error) throw error;
+      pintarComprobante(tok);
+    } catch (e) { lb.style.pointerEvents = ""; lb.lastChild.textContent = "Subir foto del comprobante"; err(/fetch|network/i.test(e && e.message) ? "Sin conexión. Intenta otra vez cuando tengas internet." : errMsg(e)); }
+  };
+  document.getElementById("cn").onsubmit = async ev => {
+    ev.preventDefault();
+    const b = ev.target.querySelector(".btn"); b.disabled = true;
+    const { error } = await sb.rpc("enviar_comprobante", { p_token: tok, p_path: null, p_nota: ev.target.nota.value });
+    b.disabled = false;
+    if (error) { err(errMsg(error)); return; }
+    pintarComprobante(tok);
+  };
 }
 
 function ticket(x, de, ev) {

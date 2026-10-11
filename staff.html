@@ -365,11 +365,39 @@ async function viewPanel() {
     </div>
     <button class="btn btn-paper" id="rf">Actualizar</button>
   </section>
+  <section class="pad stack" style="padding-top:6px" id="comprobantes"></section>
   <section class="pad stack" style="padding-top:6px" id="horario"><span class="kick">Horario y agenda</span><div class="spin" style="margin:20px auto"></div></section>
   <section class="pad stack" style="padding-top:6px" id="equipo"><span class="kick">Equipo</span><div class="spin" style="margin:20px auto"></div></section>`;
   document.getElementById("rf").onclick = viewPanel;
   pintarHorario();
+  pintarComprobantes();
   pintarEquipo();
+}
+
+async function pintarComprobantes() {
+  const el = document.getElementById("comprobantes"); if (!el) return;
+  const { data: u, error } = await sb.rpc("comprobantes_uso");
+  if (error || !u) { el.innerHTML = ""; return; }
+  const lleno = u.mb >= 800;
+  el.innerHTML = `<span class="kick">Comprobantes guardados</span>
+    ${u.viejos || lleno ? `<div class="box ped" style="gap:8px;border-color:var(--amber);background:color-mix(in oklch, var(--amber) 14%, var(--paper))">
+      <strong style="font-family:'Space Mono';font-size:16px">Recordatorio</strong>
+      <span class="small">${lleno ? `El espacio está casi lleno (${u.mb} MB de 1.000). ` : ""}${u.viejos ? `Tienes ${u.viejos} ${u.viejos === 1 ? "comprobante" : "comprobantes"} de eventos que ya pasaron (${u.mb_viejos} MB). Si ya no los necesitas, bórralos para liberar espacio.` : ""}</span>
+      ${u.viejos ? `<button class="btn btn-wood btn-sm" id="bcv" style="width:100%">Borrar comprobantes de eventos pasados</button>` : ""}
+    </div>` : ""}
+    <span class="small muted">${u.total} ${u.total === 1 ? "foto" : "fotos"} · ${u.mb} MB de 1.000 MB del plan gratis. Los comprobantes de eventos que no han pasado nunca se borran.</span>`;
+  const b = document.getElementById("bcv"); if (!b) return;
+  b.onclick = async () => {
+    if (!confirm(`¿Borrar ${u.viejos} comprobantes de eventos pasados? No se pueden recuperar. Los pedidos y entradas no se tocan.`)) return;
+    b.disabled = true; b.textContent = "Borrando…";
+    for (let i = 0; i < u.paths.length; i += 100) {
+      const lote = u.paths.slice(i, i + 100);
+      const { error } = await sb.storage.from("comprobantes").remove(lote);
+      if (error) { alert(errMsg(error)); break; }
+      await sb.rpc("marcar_comprobantes_borrados", { p_paths: lote });
+    }
+    pintarComprobantes();
+  };
 }
 
 async function pintarHorario() {
@@ -562,6 +590,7 @@ async function viewPagos() {
     ${pend.map(p => `<div class="box ped" data-k="${key(p)}">
       <div class="row"><div class="grow"><strong style="font-family:'Space Mono';font-size:17px;display:block">${esc(p.nombre)}</strong><span class="small muted">+${esc(p.telefono)}${p.cedula ? " · CI " + esc(p.cedula) : ""}${p.socio ? " · socio" : ""} · ${fH(p.creado_en)}</span></div><span class="ref">${esc(p.ref)}</span></div>
       <div class="row"><span class="grow small">${esc(resumen(p.entradas))}</span><strong style="font-family:'Space Mono';font-size:22px">${money(p.total)}</strong></div>
+      ${p.comprobante || p.comprobante_nota ? `<div class="row" style="flex-wrap:wrap;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px"><span class="grow small"><strong>Comprobante</strong> · ${fH(p.comprobante_en)}${p.comprobante_nota ? `<span style="display:block">Dice: ${esc(p.comprobante_nota)}</span>` : ""}</span>${p.comprobante ? `<button class="btn btn-paper btn-sm" data-cv="${esc(p.comprobante)}">Ver foto</button>` : ""}</div>` : `<span class="small muted">Aún no sube comprobante.</span>`}
       <div class="row"><button class="btn btn-wood btn-sm grow" data-ok="${p.id}">Confirmar pago</button><button class="link" data-x="${p.id}">Anular</button></div>
     </div>`).join("") || `<p class="small muted">Nada pendiente.</p>`}
     <span class="kick" style="margin-top:10px">Confirmados · ${pag.length}</span>
@@ -579,6 +608,12 @@ async function viewPagos() {
   document.getElementById("xls").onclick = () => exportarLista(peds);
   document.getElementById("q").oninput = ev => { const q = ev.target.value.trim().toLowerCase(); S().querySelectorAll("[data-k]").forEach(c => c.style.display = !q || c.dataset.k.includes(q) ? "" : "none"); };
   document.getElementById("rf").onclick = viewPagos;
+  S().querySelectorAll("[data-cv]").forEach(b => b.onclick = async () => {
+    const w = window.open("", "_blank");
+    const { data, error } = await sb.storage.from("comprobantes").createSignedUrl(b.dataset.cv, 600);
+    if (error) { if (w) w.close(); alert(errMsg(error)); return; }
+    if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+  });
   S().querySelectorAll("[data-ok]").forEach(b => b.onclick = async () => {
     const p = pend.find(x => x.id == b.dataset.ok);
     if (!confirm(`¿Ya viste ${money(p.total)} en la cuenta con la referencia ${p.ref}?`)) return;
