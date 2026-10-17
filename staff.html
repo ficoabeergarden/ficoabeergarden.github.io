@@ -409,7 +409,7 @@ async function pintarComprobantes() {
       <span class="small">${lleno ? `El espacio está casi lleno (${u.mb} MB de 1.000). ` : ""}${u.viejos ? `Tienes ${u.viejos} ${u.viejos === 1 ? "comprobante" : "comprobantes"} de eventos que ya pasaron (${u.mb_viejos} MB). Si ya no los necesitas, bórralos para liberar espacio.` : ""}</span>
       ${u.viejos ? `<button class="btn btn-wood btn-sm" id="bcv" style="width:100%">Borrar comprobantes de eventos pasados</button>` : ""}
     </div>` : ""}
-    <span class="small muted">${u.total} ${u.total === 1 ? "foto" : "fotos"} · ${u.mb} MB de 1.000 MB del plan gratis. Los comprobantes de eventos que no han pasado nunca se borran.</span>`;
+    <span class="small muted">${u.total} ${u.total === 1 ? "foto" : "fotos"} · ${u.mb} MB de 1.000 MB del plan con mantenimiento ($30/mes). Los comprobantes de eventos que no han pasado nunca se borran.</span>`;
   const b = document.getElementById("bcv"); if (!b) return;
   b.onclick = async () => {
     if (!confirm(`¿Borrar ${u.viejos} comprobantes de eventos pasados? No se pueden recuperar. Los pedidos y entradas no se tocan.`)) return;

@@ -1,5 +1,5 @@
 // Guarda las páginas y librerías en el teléfono para que Agenda, Club y Staff abran sin internet.
-const CACHE = "bg-v1";
+const CACHE = "bg-v2";
 const PRE = [
   "agenda.html", "club.html", "staff.html",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
@@ -20,6 +20,14 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== "GET" || url.hostname.endsWith("supabase.co")) return;
+  if (url.origin === location.origin && /\.(webp|jpg|png|otf|woff2)$/.test(url.pathname)) {
+    // Fotos y letras propias: lo guardado primero (abren al instante), internet solo la primera vez
+    e.respondWith(caches.match(req, { ignoreSearch: true }).then(m => m || fetch(req).then(r => {
+      if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
+      return r;
+    })));
+    return;
+  }
   if (url.origin === location.origin) {
     // Páginas propias: primero internet (para tener siempre la última versión), si no hay, lo guardado
     e.respondWith(fetch(req).then(r => {
