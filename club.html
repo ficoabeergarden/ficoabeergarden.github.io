@@ -203,7 +203,7 @@ function agendaHtml() {
   return `<section class="pad stack" style="gap:12px;padding-top:30px">
     <span class="kick">Agenda</span>
     ${mios.length ? `<div class="box list" style="padding:4px 16px">${mios.map(p => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block">${esc(p.evento.nombre)}</strong><span class="small muted">${f(p.evento.fecha)} · ${p.entradas.length} ${p.entradas.length === 1 ? "entrada" : "entradas"} · ${p.estado === "pagado" ? "lista" : "pendiente de pago"}</span></div><a class="btn btn-sm ${p.estado === "pagado" ? "btn-wood" : "btn-paper"}" href="agenda.html#p=${esc(p.token)}">${p.estado === "pagado" ? "Ver QR" : "Pagar"}</a></div>`).join("")}</div>` : ""}
-    ${otros.length ? `<div class="box list" style="padding:4px 16px">${otros.map(e => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block">${esc(e.nombre)}</strong><span class="small muted">${f(e.fecha)} · sumas 10 pts por cada $1</span></div><a class="btn btn-grass btn-sm" href="agenda.html?e=${esc(e.slug)}">Entradas</a></div>`).join("")}</div>` : ""}
+    ${otros.length ? `<div class="box list" style="padding:4px 16px">${otros.map(e => `<div><div class="grow"><strong style="font-family:'Space Mono';display:block">${esc(e.nombre)}</strong><span class="small muted">${f(e.fecha)} · sumas 1 pt por cada $1</span></div><a class="btn btn-grass btn-sm" href="agenda.html?e=${esc(e.slug)}">Entradas</a></div>`).join("")}</div>` : ""}
     <a class="link" href="agenda.html" style="justify-self:start">Ver toda la agenda</a>
   </section>`;
 }
@@ -241,26 +241,26 @@ function viewIntro() {
   app.innerHTML = `
   <div class="topbar"><a href="index.html">← Beer Garden</a><span>Beer Club</span></div>
   <section class="pad stack fx-arc" style="position:relative">
-    <div class="fx-badge" style="position:absolute;right:22px;top:26px">+50<br>pts<br>gratis</div>
+    <div class="fx-badge" style="position:absolute;right:22px;top:26px">+10<br>pts<br>gratis</div>
     <span class="kick">Programa de socios</span>
     <h1 class="rise" style="font-size:clamp(46px,14vw,64px);line-height:.9">Beer<br>Club</h1>
     <p style="font-size:16px;max-width:30ch">Cada visita suma. Muestra tu QR al pagar y canjea tus puntos por cerveza, alitas y picadas.</p>
     ${ref ? `<p class="small" style="background:var(--amber);border:1px solid var(--ink);padding:8px 10px">Te invitó un amigo · código ${esc(ref.toUpperCase())}</p>` : ""}
     <div class="stack" style="gap:12px;margin-top:4px">
-      <button class="btn btn-wood" id="go-reg">Únete gratis · +2 pts</button>
+      <button class="btn btn-wood" id="go-reg">Únete gratis · +10 pts</button>
       <button class="link" id="go-in" style="justify-self:start">Ya soy socio, entrar</button>
     </div>
   </section>
   <div class="zig down"></div>
   <div class="dark fx-outline" aria-hidden="true">
-    <div>Beer Club · 2 pts x $10 · Beer Club · 2 pts x $10 ·&nbsp;</div>
+    <div>Beer Club · 1 pt x $1 · Beer Club · 1 pt x $1 ·&nbsp;</div>
     <div>Jarras gratis · Alitas · Jarras gratis · Alitas ·&nbsp;</div>
     <div>Premios · Socios · Premios · Socios · Premios ·&nbsp;</div>
   </div>
   <section class="dark pad stack" style="gap:16px;padding-top:6px">
     <span class="kick">Cómo funciona</span>
     <div class="step"><b>1</b><div><strong>Regístrate con tu celular</strong><span>Nombre, número y un PIN de 4 dígitos. Sin apps.</span></div></div>
-    <div class="step"><b>2</b><div><strong>Muestra tu QR al pagar</strong><span>2 puntos por cada $10 de consumo.</span></div></div>
+    <div class="step"><b>2</b><div><strong>Muestra tu QR al pagar</strong><span>1 punto por cada $1 de consumo.</span></div></div>
     <div class="step"><b>3</b><div><strong>Canjea cuando quieras</strong><span>Elige tu premio y muéstrale el código al mesero.</span></div></div>
   </section>
   <div class="zig"></div>
@@ -273,7 +273,7 @@ function viewIntro() {
       <span style="font-family:'Space Mono';font-weight:700;font-size:34px;line-height:1;color:var(--amber)"><span id="cnt">50</span> pts</span>
     </div>
     <div class="ruta" id="ruta"><i class="fill" id="fill"></i><div class="muted small">Cargando…</div></div>
-    <p class="small muted">Empiezas con 2 pts de regalo. Por cada $10 de consumo sumas 2 pts.</p>
+    <p class="small muted">Empiezas con 10 pts de regalo. Por cada $1 de consumo sumas 1 pt.</p>
   </section>`;
   document.getElementById("go-reg").onclick = viewRegistro;
   document.getElementById("go-in").onclick = viewEntrar;
@@ -285,7 +285,7 @@ function viewIntro() {
     el.innerHTML = `<i class="fill" id="fill"></i>` + recompensas.map(r => `
       <div class="box stop" data-p="${r.costo_puntos}"><span class="dot"></span>
         <div><strong style="font-family:'Space Mono';font-size:24px;line-height:1;display:block">${r.costo_puntos} pts</strong>
-        <span style="font-size:15px">${esc(r.nombre)}</span><span class="small muted" style="display:block;margin-top:2px">≈ $${Math.max(0, Math.ceil((r.costo_puntos - 2) * 5))} de consumo</span></div>
+        <span style="font-size:15px">${esc(r.nombre)}</span><span class="small muted" style="display:block;margin-top:2px">≈ $${Math.max(0, Math.ceil(r.costo_puntos - 10))} de consumo</span></div>
         <span class="stamp">¡Reclámala!</span></div>`).join("");
     animarRuta();
   });
@@ -359,7 +359,7 @@ function viewBienvenida(nombre) {
   <section class="pad stack fx-arc" style="padding-top:48px;gap:18px;position:relative">
     <div class="fx-badge" style="position:absolute;right:22px;top:30px">Socio<br>nuevo</div>
     <span class="kick">Listo, ${esc(nombre)}</span>
-    <h1 class="rise" style="font-size:clamp(44px,13vw,58px);line-height:.9">+2 pts<br>de regalo</h1>
+    <h1 class="rise" style="font-size:clamp(44px,13vw,58px);line-height:.9">+10 pts<br>de regalo</h1>
     <p style="font-size:15px">Guarda tu tarjeta en WhatsApp: se abre un chat con nosotros con el enlace ya escrito. Solo dale enviar y siempre la tendrás a mano.</p>
     <a class="btn btn-grass" href="${wa(TEL_LOCAL, msg)}" target="_blank" rel="noopener">Guardar en WhatsApp</a>
     <button class="btn btn-paper" id="ver">Ver mi tarjeta</button>
@@ -411,7 +411,7 @@ async function viewTarjeta() {
 function paintTarjeta() {
   const d = data;
   const qr = qrcode(0, "M"); qr.addData(d.qr); qr.make();
-  const invita = `Únete al Beer Club de Ficoa Beer Garden y gana 2 pts de bienvenida 🍺 ${baseUrl}?ref=${d.codigo_amigo}`;
+  const invita = `Únete al Beer Club de Ficoa Beer Garden y gana 10 pts de bienvenida 🍺 ${baseUrl}?ref=${d.codigo_amigo}`;
   const fecha = s => new Date(s).toLocaleDateString("es-EC", { day: "numeric", month: "short" });
   const etiqueta = m => m.nota || { compra: "Consumo", canje: "Canje", bono: "Bono", ajuste: "Ajuste", vencimiento: "Vencimiento" }[m.tipo];
   app.innerHTML = `
@@ -420,7 +420,7 @@ function paintTarjeta() {
     <div class="row"><span class="kick grow">Socio · ${esc(d.nombre)}</span></div>
     <div><div class="pts" id="pts">${d.puntos}<small>pts</small></div></div>
     <div class="stack" style="gap:8px">
-      <span class="small" style="opacity:.85">Por cada $10 de consumo sumas 2 pts.</span>
+      <span class="small" style="opacity:.85">Por cada $1 de consumo sumas 1 pt.</span>
     </div>
   </section>
   <div class="zig" style="margin-bottom:22px"></div>
@@ -440,7 +440,7 @@ function paintTarjeta() {
     </div>
   </section>
   <section class="pad stack" style="gap:12px;padding-top:6px">
-    <span class="kick">Invita a un amigo · +100 pts</span>
+    <span class="kick">Invita a un amigo · +2 pts</span>
     <div class="box fx-ticket fx-lift" style="padding:14px 18px;display:grid;gap:12px">
       <div class="row"><span class="grow small muted">Tu código</span><strong style="font-family:'Space Mono';font-size:22px;letter-spacing:.12em">${esc(d.codigo_amigo)}</strong></div>
       <a class="btn btn-grass btn-sm" style="width:100%" href="${wa("", invita)}" target="_blank" rel="noopener">Compartir por WhatsApp</a>

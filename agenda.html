@@ -318,7 +318,7 @@ async function viewComprar(slug) {
     </div>
     <span class="small muted" style="margin-top:-4px">Hasta 10 por pedido. Cada entrada tiene su propio QR.</span>
     <span class="kick" style="margin-top:8px">2 · Tus datos</span>
-    ${socio ? `<div class="box row" style="padding:12px 16px"><span class="grow">Comprando como <strong>${esc(socio.nombre)}</strong><span class="small muted" style="display:block">Socio Beer Club · sumas 2 pts por cada $10</span></span></div>` : `
+    ${socio ? `<div class="box row" style="padding:12px 16px"><span class="grow">Comprando como <strong>${esc(socio.nombre)}</strong><span class="small muted" style="display:block">Socio Beer Club · sumas 1 pt por cada $1</span></span></div>` : `
     <label class="field">Nombre<input class="input" name="nombre" required minlength="2" autocomplete="name" placeholder="Ana Pérez"></label>
     <label class="field">Celular (WhatsApp)<div class="tel"><span>+593</span><input class="input" name="tel" required inputmode="tel" autocomplete="tel-national" placeholder="099 123 4567"></div></label>
     <span class="small muted" style="margin-top:-6px">Si eres del Beer Club usa el mismo celular y sumas puntos.</span>`}

@@ -243,7 +243,7 @@ async function buscar(qr) {
 }
 
 function viewMonto() {
-  const n = parseFloat(monto || "0"), pts = Math.floor(n * 0.2);
+  const n = parseFloat(monto || "0"), pts = Math.floor(n);
   V().innerHTML = `
   <section class="pad stack">
     <div class="box row" style="padding:14px 16px">
@@ -324,7 +324,7 @@ async function viewPremios() {
   V().innerHTML = `<section class="pad stack">
     <button class="link" id="atras" style="justify-self:start">← Volver a canjear</button>
     <h2 style="font-size:26px">Premios</h2>
-    <p class="small muted">Cada $10 de consumo dan 2 puntos. Si ocultas un premio, deja de aparecer en la tarjeta de los clientes.</p>
+    <p class="small muted">Cada $1 de consumo da 1 punto. Si ocultas un premio, deja de aparecer en la tarjeta de los clientes.</p>
     ${rs.map(card).join("")}
     <span class="kick" style="margin-top:10px">Nuevo premio</span>
     ${card(null)}
